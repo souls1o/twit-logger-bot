@@ -3,6 +3,8 @@ import urllib.parse
 import base64
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
+from keep_alive import keep_alive
+keep_alive()
 
 TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
 
