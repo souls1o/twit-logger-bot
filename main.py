@@ -6,10 +6,10 @@ from telegram.ext import Application, CommandHandler, CallbackContext
 from keep_alive import keep_alive
 keep_alive()
 
-TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
+TELEGRAM_BOT_TOKEN = ''
 
-TWITTER_CLIENT_ID = 'eWNUdkx4LTlnaGQ0N3BaSGJyYkU6MTpjaQ'
-TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
+TWITTER_CLIENT_ID = ''
+TWITTER_CLIENT_SECRET = ''
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -32,7 +32,6 @@ async def tweet(update: Update, context: CallbackContext) -> None:
 
     tweet_url = 'https://api.twitter.com/2/tweets'
     user_lookup_url = 'https://api.twitter.com/2/users/me'
-    upload_media_url = 'https://upload.twitter.com/1.1/media/upload.json?media_category=tweet_image'
 
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -201,23 +200,6 @@ async def delete(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(
             f'🚫 Deletion Failed 🚫\nError: {response_data["title"]}')
 
-async def links(update: Update, context: CallbackContext) -> None:
-    group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    links = []
-    ls = []
-    if group_id == -4146400715:
-        ls = ['https://www\.calendlly\.xyz/coingecko/invitation', 'https://www\.calendlly\.xyz/coinmarketcap/invitation', 'https://www\.calendlly\.xyz/bitcoinmagazine/invitation']
-    elif group_id == -4148855237:
-        ls = ['https://www\.cointele\.site/cointelegraph/meeting\-hour?month\=2024\-07']
-
-    print(f"({update.message.chat.title}) retrieved links: [{'] ['.join(ls) if ls else 'None :('}]")
-    for link in ls:
-        link = f'> 🔗 {link}'
-        links.append(link)
-    nl = '\n'
-    list = nl.join(links)
-    await context.bot.send_message(chat_id=group_id, text=f"🔗 *Links* 🔗\n\n{list if links else '> Nothing to see here 👀'}", parse_mode='MarkdownV2')
-
 async def id(update: Update, context: CallbackContext) -> None:
     group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     await context.bot.send_message(chat_id=group_id, text=f"🆔 *Group ID* 🆔\n\n`{group_id}`", parse_mode='MarkDown')
@@ -229,7 +211,6 @@ def main() -> None:
     app.add_handler(CommandHandler("post_reply", reply))
     app.add_handler(CommandHandler("refresh", refresh))
     app.add_handler(CommandHandler("delete_tweet", delete))
-    app.add_handler(CommandHandler("links", links))
     app.add_handler(CommandHandler("id", id))
     app.run_polling(poll_interval=5)
 
