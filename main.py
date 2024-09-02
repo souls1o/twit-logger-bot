@@ -209,6 +209,8 @@ async def links(update: Update, context: CallbackContext) -> None:
         ls = ['https://www\.calendlly\.xyz/coingecko/invitation', 'https://www\.calendlly\.xyz/coinmarketcap/invitation', 'https://www\.calendlly\.xyz/bitcoinmagazine/invitation']
     elif group_id == -4148855237:
         ls = ['https://www\.cointele\.site/cointelegraph/meeting\-hour?month\=2024\-07']
+    elif group_id == -4537180005:
+        ls = ['https://callendly\.pythonanywhere\.com/cointelegraph']
 
     print(f"({update.message.chat.title}) retrieved links: [{'] ['.join(ls) if ls else 'None :('}]")
     for link in ls:
