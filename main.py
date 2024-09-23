@@ -6,10 +6,10 @@ from telegram.ext import Application, CommandHandler, CallbackContext
 from keep_alive import keep_alive
 keep_alive()
 
-TELEGRAM_BOT_TOKEN = ''
+TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
 
-TWITTER_CLIENT_ID = ''
-TWITTER_CLIENT_SECRET = ''
+TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
+TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
 
 
 async def start(update: Update, context: CallbackContext) -> None:
