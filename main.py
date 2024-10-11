@@ -10,7 +10,7 @@ from telegram.ext import Application, CommandHandler, CallbackContext
 from keep_alive import keep_alive
 keep_alive()
 
-MONGO_URI = "mongodb+srv://advonisx:AMiyOi4ZWNzhuOBd@cluster0.qtpxk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = "mongodb+srv://advonisx:AMiyOi4ZWNzhuOBd@cluster0.qtpxk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0&ssl=true"
 TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
 TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
 TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
@@ -37,7 +37,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    text = "❔ *Commands*\n\n *•* 🐦 */post_tweet* <username> <message> - Posts a tweet on behalf of the user.\n *•* 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n *•* ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n *•* 👥 */display_users* - Shows the list of authenticated users.\n *•* 🔗 */display_endpoint* - Displays the group's endpoint.\n *•* 🔄 */set_redirect* - Sets the redirect upon authorization.\n *•* ❔ */help* - Displays the list of commands."
+    text = "❔ *List of Commands*\n\n *•* 🐦 */post_tweet* <username> <message> - Posts a tweet on behalf of the user.\n *•* 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n *•* ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n *•* 👥 */display_users* - Shows the list of authenticated users.\n *•* 🔗 */display_endpoint* - Displays the group's endpoint.\n *•* 🔄 */set_redirect* - Sets the redirect upon authorization.\n *•* ❔ */help* - Displays the list of commands."
     parse_mode = "MarkDown"
     
     await context.bot.send_message(chat_id, text, parse_mode)
