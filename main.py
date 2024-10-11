@@ -16,11 +16,19 @@ async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Welcome to the Twitter Logger')
 
 
+async def help(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    text = "ℹ️ *Commands*\n\n • 🐦 */post_tweet <username> <message>* - Posts a tweet on behalf of the user.\n • 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n • ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n • 🔄 */set_redirect* - Sets the redirect upon authorization.\n • ℹ️ */help* - Displays the list of commands."
+    parse_mode = "MarkDown"
+    
+    await context.bot.send_message(chat_id, text, parse_mode)
+
+
 async def tweet(update: Update, context: CallbackContext) -> None:
     args = context.args
     if len(args) < 2:
         await update.message.reply_text(
-            'Usage: /post_tweet {accessToken} {text}')
+            'Usage: /post_tweet <username> <message>')
         return
 
     access_token = args[0]
