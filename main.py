@@ -13,7 +13,8 @@ TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
 
 
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Welcome to the Twitter Logger')
+    if context.args == None: return
+    await update.message.reply_text(f'Welcome to twtred. Key: {context.args[0]}')
 
 
 async def help(update: Update, context: CallbackContext) -> None:
@@ -235,6 +236,7 @@ async def id(update: Update, context: CallbackContext) -> None:
 def main() -> None:
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help))
     app.add_handler(CommandHandler("post_tweet", tweet))
     app.add_handler(CommandHandler("post_reply", reply))
     app.add_handler(CommandHandler("refresh", refresh))
