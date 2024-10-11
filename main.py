@@ -1,15 +1,32 @@
+import random
+import string
 import requests
 import urllib.parse
 import base64
+from pymongo import MongoClient
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 from keep_alive import keep_alive
 keep_alive()
 
+MONGO_URI = "mongodb+srv://advonisx:AMiyOi4ZWNzhuOBd@cluster0.qtpxk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
-
 TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
 TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
+
+client = MongoClient(MONGO_URI)
+db = client['cobra_db']
+users = db['users']
+licenses = db['licenses']
+
+def generate_random_key(length=12, segment_length=4):
+    characters = string.ascii_uppercase + string.digits  # Use uppercase letters and digits
+    key = ''.join(random.choice(characters) for _ in range(length))
+    
+    # Insert dashes at every `segment_length` interval
+    segments = [key[i:i+segment_length] for i in range(0, len(key), segment_length)]
+    
+    return '-'.join(segments)
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -19,7 +36,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    text = "ℹ️ *Commands*\n\n • 🐦 */post_tweet <username> <message>* - Posts a tweet on behalf of the user.\n • 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n • ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n • 🔄 */set_redirect* - Sets the redirect upon authorization.\n • ℹ️ */help* - Displays the list of commands."
+    text = "❔ *Commands*\n\n *•* 🐦 */post_tweet* <username> <message> - Posts a tweet on behalf of the user.\n *•* 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n *•* ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n *•* 👥 */display_users* - Shows the list of authenticated users.\n *•* 🔗 */display_endpoint* - Displays the group's endpoint.\n *•* 🔄 */set_redirect* - Sets the redirect upon authorization.\n *•* ❔ */help* - Displays the list of commands."
     parse_mode = "MarkDown"
     
     await context.bot.send_message(chat_id, text, parse_mode)
@@ -232,6 +249,41 @@ async def links(update: Update, context: CallbackContext) -> None:
 async def id(update: Update, context: CallbackContext) -> None:
     group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     await context.bot.send_message(chat_id=group_id, text=f"🆔 *Group ID* 🆔\n\n`{group_id}`", parse_mode='MarkDown')
+    
+    
+async def generate_key(update: Update, context: CallbackContext) -> None:
+    if len(context.args) != 1:
+        await update.message.reply_text("Usage: /generate_key <expiration>, e.g., /generate_key 1d, 7d, 1m, 1y, lifetime")
+        return
+
+    expiration = context.args[0]
+    key = generate_random_key()  # Use the function to generate a key with dashes
+    expiration_date = None
+
+    if expiration == '7d':
+        expiration_date = datetime.now() + timedelta(days=7)
+    elif expiration == '1m':
+        expiration_date = datetime.now() + timedelta(days=30)
+    elif expiration == '1y':
+        expiration_date = datetime.now() + timedelta(days=365)
+    elif expiration == 'lifetime':
+        expiration_date = None  # No expiration
+    else:
+        await update.message.reply_text("Invalid expiration format. Use 1d, 7d, 1m, 1y, or lifetime.")
+        return
+
+    # Insert the key and expiration date into the MongoDB collection
+    license_data = {
+        "key": key,
+        "used_by": None,
+        "status": "active",
+        "expiration_date": expiration_date
+    }
+    licenses.insert_one(license_data)
+
+    expiration_msg = expiration_date.strftime('%Y-%m-%d %H:%M:%S') if expiration_date else "Lifetime"
+    await update.message.reply_text(f"☑️ *License Generated*\n\n🔗 *Link*\n*https://t.me/uaODw8xjIam_bot?start={key}*\n📅 *Expiration*\n`{expiration_msg}`")
+    
 
 def main() -> None:
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
@@ -241,6 +293,7 @@ def main() -> None:
     app.add_handler(CommandHandler("post_reply", reply))
     app.add_handler(CommandHandler("refresh", refresh))
     app.add_handler(CommandHandler("delete_tweet", delete))
+    app.add_handler(CommandHandler("generate_key", generate_key))
     app.add_handler(CommandHandler("links", links))
     app.add_handler(CommandHandler("id", id))
     app.run_polling(poll_interval=5)
