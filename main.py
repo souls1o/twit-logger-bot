@@ -54,7 +54,9 @@ async def check_license(user_id, chat_id):
 async def start(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     
-    if context.args == None: return
+    if context.args == None:
+        return
+        
     key = context.args[0]
     
     license = licenses.find_one({"key": key, "used_by": None})
