@@ -92,7 +92,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    license = check_license(user_id=update.effective_user.id, chat_id=chat_id)
+    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id)
     if not license:
         return
         
@@ -113,7 +113,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
     owner_username = update.message.from_user.username
     group_name = update.message.chat.title
     
-    license = check_license(user_id=owner_id, chat_id=chat_id)
+    license = await check_license(user_id=owner_id, chat_id=chat_id)
     if license:
         text = "Setting up..."
         await context.bot.send_message(chat_id, text, parse_mode)
