@@ -48,7 +48,7 @@ async def check_license(user_id, chat_id, context):
         await context.bot.send_message(chat_id, text, parse_mode) 
         return False
         
-    expiration_date = license.get("expiration_date"))
+    expiration_date = license.get("expiration_date")
     if expiration_date and datetime.utcnow() > expiration_date:
         await context.bot.send_message(chat_id, text, parse_mode) 
         return False
