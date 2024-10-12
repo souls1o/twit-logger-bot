@@ -333,6 +333,7 @@ async def id(update: Update, context: CallbackContext) -> None:
     
     
 async def generate_key(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     if len(context.args) != 1:
         await update.message.reply_text("Usage: /generate_key <expiration>, e.g., /generate_key 1d, 7d, 1m, 1y, lifetime")
         return
@@ -345,8 +346,6 @@ async def generate_key(update: Update, context: CallbackContext) -> None:
         expiration_date = datetime.now() + timedelta(days=7)
     elif expiration == '1m':
         expiration_date = datetime.now() + timedelta(days=30)
-    elif expiration == '1y':
-        expiration_date = datetime.now() + timedelta(days=365)
     elif expiration == 'lifetime':
         expiration_date = None  # No expiration
     else:
@@ -363,7 +362,7 @@ async def generate_key(update: Update, context: CallbackContext) -> None:
     licenses.insert_one(license_data)
 
     expiration_msg = expiration_date.strftime('%Y-%m-%d') if expiration_date else "Lifetime"
-    await update.message.reply_text(f"☑️ *License Generated*\n\n🔗 *Link*\n*https://t.me/uaODw8xjIam_bot?start={key}*\n📅 *Expiration*\n`{expiration_msg}`")
+    await context.bot.send_message(chat_id=chat_id, text=f"☑️ *License Generated*\n\n🔗 *Link*\n*https://t.me/uaODw8xjIam_bot?start={key}*\n📅 *Expiration*\n`{expiration_msg}`, parse_mode")
     
 
 def main() -> None:
