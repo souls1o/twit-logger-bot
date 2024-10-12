@@ -165,7 +165,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
         user_data = {
             "group_id": chat_id
         }
-        users.update_one(
+        result = users.update_one(
             {"user_id": owner_id},
             {"$set": user_data}
         )
