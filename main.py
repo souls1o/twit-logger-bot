@@ -137,7 +137,18 @@ async def setup(update: Update, context: CallbackContext) -> None:
     group_name = update.message.chat.title
     identifier = str(uuid.uuid4())
     
-    license = await check_license(user_id=owner_id, chat_id=chat_id, context=context)
+    license = licenses.find_one({"used_by": owner_id, "status": "active"})
+    if not license:
+        text = "⚠️ *License not found or has expired. Please purchase a license to continue using Cobra Logger.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+        return
+        
+    expiration_date = license.get("expiration_date")
+    if expiration_date and datetime.utcnow() > expiration_date:
+        text = "⚠️ *License not found or has expired. Please purchase a license to continue using Cobra Logger.*"
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+    
     if license:
         group_data = {
             "group_id": chat_id,
