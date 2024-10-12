@@ -89,7 +89,7 @@ async def help(update: Update, context: CallbackContext) -> None:
 
 async def setup(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    if update.effective.chat_type == "private":
+    if update.effective_chat.type == "private":
         text = "❌ *This command can only be used in groups.*"
         
         await context.bot.send_message(chat_id, text, parse_mode) 
