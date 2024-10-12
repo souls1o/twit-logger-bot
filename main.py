@@ -42,9 +42,14 @@ def generate_random_key(length=12, segment_length=4):
 async def check_license(user_id, chat_id, context):
     license = licenses.find_one({"used_by": user_id, "status": "active"})
     
+    text = "⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*"
+    
     if not license:
-        text = "⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*"
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return False
         
+    expiration_date = license.get("expiration_date"))
+    if expiration_date and datetime.utcnow() > expiration_date:
         await context.bot.send_message(chat_id, text, parse_mode) 
         return False
         
