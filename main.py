@@ -4,6 +4,7 @@ import requests
 import urllib.parse
 import base64
 import validators
+import uuid
 from datetime import datetime, timedelta
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
