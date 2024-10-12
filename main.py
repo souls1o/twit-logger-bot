@@ -59,7 +59,7 @@ async def check_license(user_id, chat_id, context):
             
         return True
     else:
-        text = "⚠️ Group has not been setup yet. Use the /setup command to setup your group for OAuth."
+        text = "⚠️ *Group has not been setup yet. Use the /setup command to setup your group for OAuth.*"
         await context.bot.send_message(chat_id, text, parse_mode) 
         return False
 
@@ -126,6 +126,12 @@ async def help(update: Update, context: CallbackContext) -> None:
 
 async def setup(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+            
     owner_id = update.message.from_user.id
     owner_username = update.message.from_user.username
     group_name = update.message.chat.title
@@ -133,12 +139,6 @@ async def setup(update: Update, context: CallbackContext) -> None:
     
     license = await check_license(user_id=owner_id, chat_id=chat_id, context=context)
     if license:
-        if update.effective_chat.type == "private":
-            text = "❌ *This command can only be used in groups.*"
-            
-            await context.bot.send_message(chat_id, text, parse_mode) 
-            return
-        
         group_data = {
             "group_id": chat_id,
             "group_name": group_name,
@@ -168,6 +168,8 @@ async def setup(update: Update, context: CallbackContext) -> None:
 
 
 async def set_redirect(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    
     license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
     if not license:
         return
@@ -184,7 +186,6 @@ async def set_redirect(update: Update, context: CallbackContext) -> None:
             'Usage: /set_redirect <url>')
         return
         
-    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     url = args[0]
     
     if not validators.url(url):
