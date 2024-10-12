@@ -37,7 +37,9 @@ async def start(update: Update, context: CallbackContext) -> None:
     key = context.args[0]
     
     license = licenses.find_one({"key": key, "used_by": None})
-    if not license: await context.bot.send_message(chat_id, text="❌ *The license you provided is invalid.*") return
+    if not license: 
+        await context.bot.send_message(chat_id, text="❌ *The license you provided is invalid.*") 
+        return
     
     user_id = update.effective_user.id
     username = update.effective_user.username
@@ -72,18 +74,20 @@ async def help(update: Update, context: CallbackContext) -> None:
 
 async def setup(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    if update.effective.chat_type == "private": await context.bot.send_message(chat_id, text="❌ *This command can only be used in groups*", parse_mode) return
+    if update.effective.chat_type == "private": 
+        await context.bot.send_message(chat_id, text="❌ *This command can only be used in groups*", parse_mode) 
+        return
     
     owner_id = update.message.from_user.id
     owner_username = update.message.from_user.username
     group_name = update.message.chat.title
     
     license = licenses.find_one({"used_by": owner_id, "status": "active"})
-    if not license: await context.bot.send_message(chat_id, text="⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*", parse_mode) return
+    if not license: 
+        await context.bot.send_message(chat_id, text="⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*", parse_mode) 
+        return
     
-    user = users.find_one({"user_id": owner_id})
-    if user:
-        
+    
     
     await context.bot.send_message(chat_id, text="", parse_mode)
         
