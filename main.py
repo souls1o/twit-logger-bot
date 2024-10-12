@@ -159,7 +159,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
         )
         
         if result.modified_count > 0:
-            text = f"✅ *Group has been set up for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* `{group_data['group_id']}`\n┣  *Group Name:* `{group_data['group_name']}`\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* `{group_data['identifier']}`"
+            text = f"✅ *Group successfully set up for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* `{group_data['group_id']}`\n┣  *Group Name:* `{group_data['group_name']}`\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* `{group_data['identifier']}`"
             await context.bot.send_message(chat_id, text, parse_mode)
         else:
             text = "⚠️ *An unknown error has occured.*"
@@ -187,7 +187,7 @@ async def set_redirect(update: Update, context: CallbackContext) -> None:
     url = args[0]
     
     if not validators.url(url):
-        text = "⚠️ *The url you provided is invalid.*"
+        text = "⚠️ *The URL you provided is invalid.*"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
         group_data = {
@@ -197,6 +197,9 @@ async def set_redirect(update: Update, context: CallbackContext) -> None:
             {"group_id": chat_id},
             {"$set": group_data}
         )
+        
+        text = f"✅ Redirect URL for this group successfully set to {url}."
+        await context.bot.send_message(chat_id, text, parse_mode)
 
 async def tweet(update: Update, context: CallbackContext) -> None:
     license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
