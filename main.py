@@ -31,7 +31,7 @@ def generate_random_key(length=12, segment_length=4):
     
     return '-'.join(segments)
     
-def check_license(user_id, chat_id):
+async def check_license(user_id, chat_id):
     license = licenses.find_one({"used_by": user_id, "status": "active"})
     
     if not license:
