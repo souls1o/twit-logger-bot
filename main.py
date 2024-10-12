@@ -39,7 +39,7 @@ def generate_random_key(length=12, segment_length=4):
     
     return '-'.join(segments)
     
-async def check_license(user_id, chat_id):
+async def check_license(user_id, chat_id, context):
     license = licenses.find_one({"used_by": user_id, "status": "active"})
     
     if not license:
@@ -92,7 +92,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id)
+    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
     if not license:
         return
         
@@ -113,7 +113,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
     owner_username = update.message.from_user.username
     group_name = update.message.chat.title
     
-    license = await check_license(user_id=owner_id, chat_id=chat_id)
+    license = await check_license(user_id=owner_id, chat_id=chat_id, context=context)
     if license:
         text = "Setting up..."
         await context.bot.send_message(chat_id, text, parse_mode)
