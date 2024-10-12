@@ -60,8 +60,10 @@ async def start(update: Update, context: CallbackContext) -> None:
     key = context.args[0]
     
     license = licenses.find_one({"key": key, "used_by": None})
-    if not license: 
-        await context.bot.send_message(chat_id, text="❌ *The license you provided is invalid.*") 
+    if not license:
+        text="❌ *The license key you provided is invalid.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode)
         return
     
     user_id = update.effective_user.id
