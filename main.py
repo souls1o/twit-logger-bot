@@ -52,7 +52,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     users.insert_one(user_data)
     
     license_data = {
-        "used_by" user_id,
+        "used_by": user_id,
     }
     result = licenses.update_one(
         {"key": key},
