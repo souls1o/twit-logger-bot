@@ -85,6 +85,8 @@ async def start(update: Update, context: CallbackContext) -> None:
     )
     
     if result.modified_count > 0:
+        expiration_date = license.get("expiration_date")
+        
         text = f"🐍 Welcome to Cobra Logger, *{update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_date}`\n\n💬 _To get started, add me to a group and use the */setup* command to setup your group for OAuth._"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
@@ -360,7 +362,7 @@ async def generate_key(update: Update, context: CallbackContext) -> None:
     }
     licenses.insert_one(license_data)
 
-    expiration_msg = expiration_date.strftime('%Y-%m-%d %H:%M:%S') if expiration_date else "Lifetime"
+    expiration_msg = expiration_date.strftime('%Y-%m-%d') if expiration_date else "Lifetime"
     await update.message.reply_text(f"☑️ *License Generated*\n\n🔗 *Link*\n*https://t.me/uaODw8xjIam_bot?start={key}*\n📅 *Expiration*\n`{expiration_msg}`")
     
 
