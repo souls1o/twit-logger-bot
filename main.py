@@ -4,7 +4,8 @@ import requests
 import urllib.parse
 import base64
 from datetime import datetime, timedelta
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 from keep_alive import keep_alive
@@ -15,13 +16,20 @@ TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
 TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
 TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
 
-client = MongoClient(MONGO_URI)
+client = MongoClient(MONGO_URI, server_api=ServerApi)
 db = client['cobra_db']
 users = db['users']
 groups = db['groups']
 licenses = db['licenses']
 
 parse_mode = "MarkDown"
+
+try:
+    client.admin.command('ping')
+    print("[+] MongoDB has successfully connected.")
+except Exception as e:
+    print("[-] MongoDB has failed connecting.")
+    print(e)
 
 def generate_random_key(length=12, segment_length=4):
     characters = string.ascii_uppercase + string.digits  # Use uppercase letters and digits
