@@ -16,7 +16,7 @@ TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
 TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
 TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
 
-client = MongoClient(MONGO_URI, server_api=ServerApi)
+client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client['cobra_db']
 users = db['users']
 groups = db['groups']
