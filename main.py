@@ -86,8 +86,9 @@ async def start(update: Update, context: CallbackContext) -> None:
     
     if result.modified_count > 0:
         expiration_date = license.get("expiration_date")
+        expiration_msg = expiration_date.strftime('%Y-%m-%d') if expiration_date else "Never"
         
-        text = f"🐍 Welcome to Cobra Logger, *{update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_date}`\n\n💬 _To get started, add me to a group and use the */setup* command to setup your group for OAuth._"
+        text = f"🐍 *Welcome to Cobra Logger, {update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_date}`\n\n💬 _To get started, add me to a group and use the */setup* command to setup your group for OAuth._"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = "⚠️ *An unknown error occured.*"
