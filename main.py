@@ -92,6 +92,10 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    license = check_license(user_id=update.effective_user.id, chat_id=chat_id)
+    if not license:
+        return
+        
     text = "❔ *List of Commands*\n\n *•* 🐦 */post_tweet* <username> <message> - Posts a tweet on behalf of the user.\n *•* 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n *•* ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n *•* 👥 */display_users* - Shows the list of authenticated users.\n *•* 🔗 */display_endpoint* - Displays the group's endpoint.\n *•* 🔄 */set_redirect* - Sets the redirect upon authorization.\n *•* ❔ */help* - Displays the list of commands."
     
     await context.bot.send_message(chat_id, text, parse_mode)
