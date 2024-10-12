@@ -145,7 +145,7 @@ async def tweet(update: Update, context: CallbackContext) -> None:
             chat_id=chatId,
             text=
             f'✅ *Tweet Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode)
+            parse_mode=parse_mode)
     else:
         await context.bot.send_message(
             chat_id=chatId,
@@ -194,7 +194,7 @@ async def reply(update: Update, context: CallbackContext) -> None:
             chat_id=chatId,
             text=
             f'✅ *Reply Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode)
+            parse_mode=parse_mode)
     else:
         await context.bot.send_message(
             chat_id=chatId,
@@ -252,11 +252,11 @@ async def refresh(update: Update, context: CallbackContext) -> None:
                 chat_id=chatId,
                 text=
                 f'🔄 *Token Refreshed* 🔄\n\n👤 Account:\nx.com/{username}\n\n🔑 Access Token:\n`{new_access_token}`\n\n🔄 Refresh Token:\n`{new_refresh_token}`',
-                parse_mode)
+                parse_mode=parse_mode)
         else:
             await update.message.reply_text(
                 f'🚫 *Refresh Failed* 🚫\nError: {response_data["error_description"]}',
-                parse_mode)
+                parse_mode=parse_mode)
     except Exception as e:
         await update.message.reply_text(
             f'🚫 *Refresh Failed* 🚫\nError: {str(e)}')
@@ -354,6 +354,7 @@ def main() -> None:
     app.add_handler(CommandHandler("help", help))
     app.add_handler(CommandHandler("post_tweet", tweet))
     app.add_handler(CommandHandler("post_reply", reply))
+    app.add_handler(CommandHandler("setup", setup))
     app.add_handler(CommandHandler("refresh", refresh))
     app.add_handler(CommandHandler("delete_tweet", delete))
     app.add_handler(CommandHandler("generate_key", generate_key))
