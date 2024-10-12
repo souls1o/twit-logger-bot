@@ -30,9 +30,22 @@ def generate_random_key(length=12, segment_length=4):
     segments = [key[i:i+segment_length] for i in range(0, len(key), segment_length)]
     
     return '-'.join(segments)
+    
+def check_license(user_id, chat_id):
+    license = licenses.find_one({"used_by": user_id, "status": "active"})
+    
+    if not license:
+        text = "⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return False
+        
+    return True
 
 
 async def start(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    
     if context.args == None: return
     key = context.args[0]
     
@@ -60,9 +73,11 @@ async def start(update: Update, context: CallbackContext) -> None:
     )
     
     if result.modified_count > 0:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"🐍 Welcome to Cobra Logger, *{update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_date}`\n\n💬 _To get started, add me to a group and use the */setup* command to setup your group for OAuth._")
+        text = f"🐍 Welcome to Cobra Logger, *{update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_date}`\n\n💬 _To get started, add me to a group and use the */setup* command to setup your group for OAuth._"
+        await context.bot.send_message(chat_id, text, parse_mode)
     else:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="⚠️ *An unknown error occured.*", parse_mode)
+        text = "⚠️ *An unknown error occured.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
 
 
 async def help(update: Update, context: CallbackContext) -> None:
@@ -74,22 +89,20 @@ async def help(update: Update, context: CallbackContext) -> None:
 
 async def setup(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    if update.effective.chat_type == "private": 
-        await context.bot.send_message(chat_id, text="❌ *This command can only be used in groups*", parse_mode) 
+    if update.effective.chat_type == "private":
+        text = "❌ *This command can only be used in groups.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
         return
     
     owner_id = update.message.from_user.id
     owner_username = update.message.from_user.username
     group_name = update.message.chat.title
     
-    license = licenses.find_one({"used_by": owner_id, "status": "active"})
-    if not license: 
-        await context.bot.send_message(chat_id, text="⚠️ *License not found or is expired. Please purchase a license to continue using Cobra Logger.*", parse_mode) 
-        return
-    
-    
-    
-    await context.bot.send_message(chat_id, text="", parse_mode)
+    license = check_license(user_id=owner_id, chat_id=chat_id)
+    if license:
+        text = "Setting up..."
+        await context.bot.send_message(chat_id, text, parse_mode)
         
 
 async def tweet(update: Update, context: CallbackContext) -> None:
