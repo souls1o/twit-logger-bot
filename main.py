@@ -59,7 +59,7 @@ async def check_license(user_id, chat_id, context):
             
         return True
     else:
-        text = "⚠️ *Group has not been setup yet. Use the /setup command to setup your group for OAuth.*"
+        text = "⚠️ *Group is not setup for OAuth.*\n\n💬 _Use the /setup command to setup your group for OAuth._"
         await context.bot.send_message(chat_id, text, parse_mode) 
         return False
 
@@ -116,9 +116,6 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
-    if not license:
-        return
         
     text = "❔ *List of Commands*\n\n *•* 🐦 */post_tweet* <username> <message> - Posts a tweet on behalf of the user.\n *•* 💬 */post_reply* <username> <tweetId> <message> - Posts a reply to a tweet on behalf of the user.\n *•* ❌ */delete_tweet* <username> <tweetId> - Deletes a tweet on behalf of the user.\n *•* 👥 */display_users* - Shows the list of authenticated users.\n *•* 🔗 */display_endpoint* - Displays the group's endpoint.\n *•* 🔄 */set_redirect* - Sets the redirect upon authorization.\n *•* ❔ */help* - Displays the list of commands."
     await context.bot.send_message(chat_id, text, parse_mode)
@@ -130,6 +127,12 @@ async def setup(update: Update, context: CallbackContext) -> None:
         text = "❌ *This command can only be used in groups.*"
         
         await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+        
+    group = groups.find_one({"group_id": chat_id})
+    if group:
+        text = "⚠️ *This group is already setup for OAuth.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
         return
             
     owner_id = update.message.from_user.id
@@ -171,7 +174,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
         )
         
         if result.modified_count > 0:
-            text = f"✅ *Group successfully set up for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* `{group_data['group_id']}`\n┣  *Group Name:* `{group_data['group_name']}`\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* `{group_data['identifier']}`"
+            text = f"✅ *Group successfully setup for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* {group_data['group_id']}\n┣  *Group Name:* {group_data['group_name']}\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* {group_data['identifier']}"
             await context.bot.send_message(chat_id, text, parse_mode)
         else:
             text = "⚠️ *An unknown error has occured.*"
@@ -211,7 +214,7 @@ async def set_redirect(update: Update, context: CallbackContext) -> None:
             {"$set": group_data}
         )
         
-        text = f"✅ Redirect URL for this group successfully set to {url}."
+        text = f"✅ *Redirect URL for this group successfully set to {url}.*"
         await context.bot.send_message(chat_id, text, parse_mode)
 
 async def tweet(update: Update, context: CallbackContext) -> None:
