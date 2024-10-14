@@ -174,7 +174,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
         )
         
         if result.modified_count > 0:
-            text = f"✅ *Group successfully setup for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* {group_data['group_id']}\n┣  *Group Name:* {group_data['group_name']}\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* {group_data['identifier']}"
+            text = f"✅ *Group successfully setup for OAuth.*\n\n╭  ℹ️ *GROUP INFO*\n┣  *Group ID:* {group_data['group_id']}\n┣  *Group Name:* {group_data['group_name']}\n┣  *Owner: @{group_data['owner_username']}*\n╰  *Identifier:* {group_data['identifier']}\n\n💬 _Use the /help command to get the list of available commands._"
             await context.bot.send_message(chat_id, text, parse_mode)
         else:
             text = "⚠️ *An unknown error has occured.*"
