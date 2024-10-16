@@ -445,8 +445,7 @@ async def delete(update: Update, context: CallbackContext) -> None:
 async def generate_key(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     
-    user = users.find_one({"user_id": update.message.from_user.id})
-    if user["user_id"] != 5074337318: return
+    if update.message.from_user.id != 5074337318: return
     
     if len(context.args) != 1:
         await update.message.reply_text("Usage: /generate_key <expiration>, e.g., /generate_key 1d, 7d, 1m, 1y, lifetime")
