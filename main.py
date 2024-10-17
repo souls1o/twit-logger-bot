@@ -294,8 +294,8 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         parse_mode = "MarkdownV2"
         text = f"✅ *Tweet successfully posted by user* **[{username}](https://x\\.com/{username})***\\.*\n" \
            f"🐦 *Tweet ID:* `{tweet_id}`\n" \
-           f"🔗 **[View tweet](https://x\\.com/{username}/status/{tweet_id})**\n\n" \
-           f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command_ */set\\_replies e*_\\._"
+           f"🔗 __[View tweet](https://x\\.com/{username}/status/{tweet_id})__\n\n" \
+           f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command_ *_/set\\_replies e_*_\\._"
                 
         await context.bot.send_message(chat_id, text, parse_mode)
     elif res.status_code == 401:
