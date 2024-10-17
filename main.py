@@ -295,18 +295,18 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         headers = {'Authorization': 'Basic ' + base64.b64encode(f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(), 'Content-Type': 'application/x-www-form-urlencoded'}
         
         data = urllib.parse.urlencode(data)
-        await context.bot.send_message(chat_id=chat_id, text=f"{data}", parse_mode=parse_mode)
+        await context.bot.send_message(chat_id=chat_id, text=f"{data}")
         
         try:
             res = requests.post(url, data, headers)
             r = res.json()
             
-            await context.bot.send_message(chat_id=chat_id, text=f"{r}", parse_mode=parse_mode)
+            await context.bot.send_message(chat_id=chat_id, text=f"{r}")
             
             new_access_token = r["access_token"]
             new_refresh_token = r.get("refresh_token", refresh_token)
             
-            await context.bot.send_message(chat_id=chat_id, text=f"{new_access_token}\n{new_refresh_token}", parse_mode=parse_mode)
+            await context.bot.send_message(chat_id=chat_id, text=f"{new_access_token}\n{new_refresh_token}")
             
             groups.update_one(
                     {"group_id": chat_id, "authenticated_users.username": username}, 
