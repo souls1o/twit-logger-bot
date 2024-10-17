@@ -293,7 +293,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id, text, parse_mode)
     elif res.status_code == 401:
         url = 'https://api.twitter.com/2/oauth2/token'
-        json = {
+        data = {
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
             'client_id': TWITTER_CLIENT_ID,
@@ -305,7 +305,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id=chat_id, text=f"{headers}")
         
         try:
-            res = requests.post(url=url, data=urllib.parse.urlencode(json), headers=headers)
+            res = requests.post(url, data, headers)
             r = res.json()
             
             await context.bot.send_message(chat_id=chat_id, text=f"{r}")
