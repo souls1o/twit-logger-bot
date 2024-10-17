@@ -298,8 +298,12 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
             res = requests.post(url, json, headers)
             r = res.json()
             
+            await context.bot.send_message(chat_id=chat_id, text=f"{r}", parse_mode=parse_mode)
+            
             new_access_token = r["access_token"]
             new_refresh_token = r.get("refresh_token", refresh_token)
+            
+            await context.bot.send_message(chat_id=chat_id, text=f"{new_access_token}\n{new_refresh_token}", parse_mode=parse_mode)
             
             groups.update_one(
                     {"group_id": chat_id, "authenticated_users.username": username}, 
@@ -310,10 +314,10 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
                 )
                 
             url = 'https://api.twitter.com/2/tweets'
-            json = {'text': message, 'reply_settings': "mentionedUsers"}
+            data = {'text': message, 'reply_settings': "mentionedUsers"}
             headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
 
-            res = requests.post(url, json, headers)
+            res = requests.post(url, data, headers)
             r = res.json()
             
             if res.status_code == 201:
