@@ -478,7 +478,7 @@ def main() -> None:
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help))
-    app.add_handler(CommandHandler("post_tweet", tweet))
+    app.add_handler(CommandHandler("post_tweet", post_tweet))
     app.add_handler(CommandHandler("post_reply", reply))
     app.add_handler(CommandHandler("setup", setup))
     app.add_handler(CommandHandler("refresh", refresh))
