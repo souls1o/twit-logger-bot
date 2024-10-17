@@ -302,11 +302,10 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         url = 'https://api.twitter.com/2/oauth2/token'
         data = {
             'grant_type': 'refresh_token',
-            'refresh_token': refresh_token,
-            'client_id': TWITTER_CLIENT_ID,
-            'client_secret': TWITTER_CLIENT_SECRET
+            'refresh_token': refresh_token
         }
         headers = {
+            'Authorization': f'Basic {credentials}',
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         await context.bot.send_message(chat_id=chat_id, text=f"{headers}")
@@ -351,7 +350,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             parse_mode = "MarkdownV2"
             
-            text = f"❌ *User* *[{username}](https://x\\.com/{username})* *revoked OAuth access and is no longer valid\\.*"
+            text = f"❌ *User *[{username}](https://x\\.com/{username}) *revoked OAuth access and is no longer valid\\.*"
             await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = f"Error code: {res.status_code}\n{r}"
