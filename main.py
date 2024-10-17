@@ -279,9 +279,13 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     message = ' '.join(arg.strip()
                           for arg in args[1:]).replace('\\n', '\n')
 
-    url = 'https://api.twitter.com/2/tweets'
+    url = 'https://api.x.com/2/tweets'
     json = {'text': message, 'reply_settings': "mentionedUsers"}
-    headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+    await context.bot.send_message(chat_id=chat_id, text=f"{json}\n\n{headers}")
     
     res = requests.post(url, json, headers)
     r = res.json()
@@ -340,8 +344,8 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
                 text = f"🚫 Failed to post tweet. Error code: {res.status_code}\n{r}"
                 await context.bot.send_message(chat_id, text, parse_mode)
         except Exception as e:
-            text = f"❌ *User* **[{username}](https://x.com/{username})** *revoked OAuth access and is no longer valid.*"
-            await context.bot.send_message(chat_id, text, parse_mode)
+            text = f"❌ *User* **[{username}](https://x.com/{username})** *revoked OAuth access and is no longer valid.*\n{e}"
+            await context.bot.send_message(chat_id, text)
     else:
         text = f"Error code: {res.status_code}\n{r}"
         await context.bot.send_message(chat_id, text, parse_mode)
