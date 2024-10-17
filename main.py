@@ -272,6 +272,8 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     access_token = user["access_token"]
     refresh_token = user["refresh_token"]
     
+    await context.bot.send_message(chat_id=chat_id, text=f"Sending message as {username}\naccess token: {access_token}\nrefresh token: {refresh_token}", parse_mode=parse_mode)
+    
     message = ' '.join(arg.strip()
                           for arg in args[1:]).replace('\\n', '\n')
 
@@ -293,7 +295,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         headers = {'Authorization': 'Basic ' + base64.b64encode(f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(), 'Content-Type': 'application/x-www-form-urlencoded'}
         
         try:
-            res = requests.post(url, json, headers)
+            res = requests.post(url, data, headers)
             r = res.json()
             
             new_access_token = r["access_token"]
