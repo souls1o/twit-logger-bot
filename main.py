@@ -18,7 +18,7 @@ TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
 TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
 TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
 
-credentials = base64.b64encode(f"{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}".encode()).decode('utf-8')
+credentials = 'ZVdOVWRreDRMVGxuYUdRME4zQmFTR0p5WWtVNk1UcGphUTo0Y2N0XzRkWjNCVnpfTU5LS2pheldpMU0zWFZlbG5TaUdxVjZSNWhCeEMtUGJqN3l0bg=='
 
 client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client['cobra_db']
@@ -302,7 +302,9 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         url = 'https://api.twitter.com/2/oauth2/token'
         data = {
             'grant_type': 'refresh_token',
-            'refresh_token': refresh_token
+            'refresh_token': refresh_token,
+            'client_id': TWITTER_CLIENT_ID,
+            'client_secret': TWITTER_CLIENT_SECRET
         }
         headers = {
             'Authorization': f'Basic {credentials}',
@@ -350,7 +352,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             parse_mode = "MarkdownV2"
             
-            text = f"❌ *User *[{username}](https://x\\.com/{username}) *revoked OAuth access and is no longer valid\\.*"
+            text = f"❌ *User* *[{username}](https://x\\.com/{username})* *revoked OAuth access and is no longer valid\\.*"
             await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = f"Error code: {res.status_code}\n{r}"
