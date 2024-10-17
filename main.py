@@ -246,6 +246,8 @@ async def display_endpoint(update: Update, context: CallbackContext) -> None:
         
 
 async def tweet(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    
     license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
     if not license:
         return
@@ -255,45 +257,39 @@ async def tweet(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(
             'Usage: /post_tweet <username> <message>')
         return
+        
+    group = groups.find_one({"group_id": chat_id})
+    if not group: 
+        return await context.bot.send_message(chat_id=chat_id, text="⚠️ *An unknown error has occurred.*", parse_mode=parse_mode)
 
-    access_token = args[0]
-    tweet_text = ' '.join(arg.strip()
-                          for arg in args[1:]).replace('\\\\n', '\n')
+    username = args[0]
+    user = next((u for u in group.get('authenticated_users', []) if u['username'].lower() == username.lower()), None)
+    if not user:
+        text = f"⚠️ *User _{username}_ has not authorized with OAuth.*"
+        return await context.bot.send_message(chat_id, text, parse_mode)
+        
+    username = user["username"]
+    access_token = user["access_token"]
+    refresh_token = user["refresh_token"]
+    
+    message = ' '.join(arg.strip()
+                          for arg in args[1:]).replace('\\n', '\n')
 
-    group_name = update.message.chat.title
-    print(f"({group_name}) tweeted: {tweet_text} [{access_token}]\n")
-
-    tweet_url = 'https://api.twitter.com/2/tweets'
-    user_lookup_url = 'https://api.twitter.com/2/users/me'
-    upload_media_url = 'https://upload.twitter.com/1.1/media/upload.json?media_category=tweet_image'
-
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.get(user_lookup_url, headers=headers)
-    response_data = response.json()
-
-    username = response_data['data']['username']
-
-    tweet_data = {'text': tweet_text, 'reply_settings': "mentionedUsers"}
-    response = requests.post(tweet_url, json=tweet_data, headers=headers)
-    response_data = response.json()
-
-    tweetId = response_data['data']['id']
-    chatId = update.message.chat_id if update.message else update.callback_query.message.chat_id
-
-    if response.status_code == 201:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=
-            f'✅ *Tweet Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode=parse_mode)
+    url = 'https://api.twitter.com/2/tweets'
+    json = {'text': tweet_text, 'reply_settings': "mentionedUsers"}
+    headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+    
+    res = requests.post(url, json, headers)
+    r = res.json()
+    
+    if res.status_code == 201:
+        tweet_id = r['data']['id']
+        
+        text = f"✅ *Tweet successfully posted by user* **[{username}.](https://x.com/{username})**\n🐦 *Tweet ID:* `{tweet_id}`\n🔗 **[View tweet](https://x.com/{username}/status/{tweet_id})**\n\n💬 _Replies for this tweet are disabled. To enable replies, use the command */set_replies e*._"
+        await context.bot.send_message(chat_id, text, parse_mode)
     else:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=f'🚫 Tweet Failed 🚫\nError: {response_data["title"]}')
+        text = f"Error code: {res.status_code}"
+        await context.bot.send_message(chat_id, text, parse_mode)
 
 
 async def reply(update: Update, context: CallbackContext) -> None:
