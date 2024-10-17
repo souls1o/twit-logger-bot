@@ -287,6 +287,42 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         
         text = f"✅ *Tweet successfully posted by user* **[{username}.](https://x.com/{username})**\n🐦 *Tweet ID:* `{tweet_id}`\n🔗 **[View tweet](https://x.com/{username}/status/{tweet_id})**\n\n💬 _Replies for this tweet are disabled. To enable replies, use the command */set_replies e*._"
         await context.bot.send_message(chat_id, text, parse_mode)
+    elif res.status_code == 401:
+        url = 'https://api.twitter.com/2/oauth2/token'
+        data = urllib.parse.urlencode({'grant_type': 'refresh_token', 'refresh_token': refresh_token})
+        headers = {'Authorization': 'Basic ' + base64.b64encode(f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(), 'Content-Type': 'application/x-www-form-urlencoded'}
+        
+        try:
+            res = requests.post(url, json, headers)
+            r = res.json()
+            
+            new_access_token = r["access_token"]
+            new_refresh_token = r.get("refresh_token", refresh_token)
+            
+            groups.update_one(
+                    {"group_id": chat_id, "authenticated_users.username": username}, 
+                    {"$set": {
+                        "authenticated_users.$.access_token": new_access_token,
+                        "authenticated_users.$.refresh_token": new_refresh_token
+                    }}
+                )
+                
+            url = 'https://api.twitter.com/2/tweets'
+            headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+
+            res = requests.post(url, json, headers)
+            r = res.json()
+            
+            if res.status_code == 201:
+                tweet_id = r['data']['id']
+                text = f"✅ *Tweet successfully posted by user* **[{username}.](https://x.com/{username})**\n🐦 *Tweet ID:* `{tweet_id}`\n🔗 **[View tweet](https://x.com/{username}/status/{tweet_id})**\n\n💬 _Replies for this tweet are disabled. To enable replies, use the command */set_replies e*._"
+                await context.bot.send_message(chat_id, text, parse_mode)
+            else:
+                text = f"🚫 Failed to post tweet. Error code: {res.status_code}\n{r}"
+                await context.bot.send_message(chat_id, text, parse_mode)
+        except Exception as e:
+            text = f"❌ *User* **[{username}](https://x.com/{username})** *revoked OAuth access and is no longer valid.*"
+            await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = f"Error code: {res.status_code}\n{r}"
         await context.bot.send_message(chat_id, text, parse_mode)
