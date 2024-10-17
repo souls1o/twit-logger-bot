@@ -291,14 +291,14 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id, text, parse_mode)
     elif res.status_code == 401:
         url = 'https://api.twitter.com/2/oauth2/token'
-        json = urllib.parse.urlencode({'grant_type': 'refresh_token', 'refresh_token': refresh_token})
+        data = urllib.parse.urlencode({'grant_type': 'refresh_token', 'refresh_token': refresh_token})
         headers = {'Authorization': 'Basic ' + base64.b64encode(f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(), 'Content-Type': 'application/x-www-form-urlencoded'}
         
         try:
-            res = requests.post(url, json, headers)
+            res = requests.post(url, data, headers)
             r = res.json()
             
-            await context.bot.send_message(chat_id=chat_id, text=f"{r}", parse_mode=parse_mode)
+            await context.bot.send_message(chat_id=chat_id, text=f"{data}", parse_mode=parse_mode)
             
             new_access_token = r["access_token"]
             new_refresh_token = r.get("refresh_token", refresh_token)
@@ -314,10 +314,10 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
                 )
                 
             url = 'https://api.twitter.com/2/tweets'
-            data = {'text': message, 'reply_settings': "mentionedUsers"}
+            json = {'text': message, 'reply_settings': "mentionedUsers"}
             headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
 
-            res = requests.post(url, data, headers)
+            res = requests.post(url, json, headers)
             r = res.json()
             
             if res.status_code == 201:
