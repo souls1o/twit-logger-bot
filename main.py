@@ -287,7 +287,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     }
     await context.bot.send_message(chat_id=chat_id, text=f"{json}\n\n{headers}")
     
-    res = requests.post(url, json, headers)
+    res = requests.post(url=url, json=json, headers=headers)
     r = res.json()
     
     await context.bot.send_message(chat_id=chat_id, text=f"{res}\n\n{r}")
@@ -331,9 +331,9 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
                 
             url = 'https://api.twitter.com/2/tweets'
             json = {'text': message, 'reply_settings': "mentionedUsers"}
-            headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+            headers = {'Authorization': f'Bearer {new_access_token}', 'Content-Type': 'application/json'}
 
-            res = requests.post(url, json, headers)
+            res = requests.post(url=url, json=json, headers=headers)
             r = res.json()
             
             if res.status_code == 201:
