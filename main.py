@@ -18,6 +18,8 @@ TELEGRAM_BOT_TOKEN = '6790216831:AAHbUIZKq38teKnZIw9zUQDRSD6csT-JEs4'
 TWITTER_CLIENT_ID = 'eWNUdkx4LTnaGQ0N3BaSGJyYkU6MTpjaQ'
 TWITTER_CLIENT_SECRET = '4cct_4dZ3BVz_MNKKjazWi1M3XVelnSiGqV6R5hBxC-Pbj7ytn'
 
+credentials = base64.b64encode(f"{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}".encode()).decode('utf-8')
+
 client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client['cobra_db']
 users = db['users']
@@ -296,7 +298,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
             'refresh_token': refresh_token
         }
         headers = {
-            'Authorization': 'Basic ' + base64.b64encode(f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(),
+            'Authorization': f'Basic {credentials}',
             'Content-Type':
             'application/x-www-form-urlencoded'
         }
@@ -499,20 +501,21 @@ async def generate_key(update: Update, context: CallbackContext) -> None:
         return
 
     expiration = context.args[0]
-    key = generate_random_key()  # Use the function to generate a key with dashes
+    key = generate_random_key()
     expiration_date = None
 
-    if expiration == '7d':
+    if expiration == '1d':
+        expiration_date = datetime.now() + timedelta(days=1)
+    elif expiration == '7d':
         expiration_date = datetime.now() + timedelta(days=7)
     elif expiration == '1m':
         expiration_date = datetime.now() + timedelta(days=30)
     elif expiration == 'lifetime':
-        expiration_date = None  # No expiration
+        expiration_date = None
     else:
         await update.message.reply_text("Invalid expiration format. Use 1d, 7d, 1m, 1y, or lifetime.")
         return
 
-    # Insert the key and expiration date into the MongoDB collection
     license_data = {
         "key": key,
         "used_by": None,
