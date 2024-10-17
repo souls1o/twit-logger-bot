@@ -294,14 +294,11 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         tweet_id = r['data']['id']
         
         parse_mode = "MarkdownV2"
-        t = f"✅ *Tweet successfully posted by user* **[{username}\\.]({username})**\n" \
-        f"🐦 *Tweet ID:* `{tweet_id}`\n" \
-        f"🔗 **[View tweet](https://x\\.com/{username}/status/{tweet_id})**\n\n" \
-        f"💬 _Replies for this tweet are disabled. To enable replies, use the command /set_replies e._"
-        
-        text = t.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[")\
-            .replace("]", "\\]").replace("(", "\\(").replace(")", "\\)")\
-            .replace(".", "\\.")
+        text = f"✅ *Tweet successfully posted by user* **[{username}\.](https://x\.com/{username})**\n" \
+            f"🐦 *Tweet ID:* `{tweet_id}`\n" \
+            f"🔗 **[View tweet](https://x\.com/{username}/status/{tweet_id})**\n\n" \
+            f"💬 _Replies for this tweet are disabled\. To enable replies, use the command /set\_replies e\._"
+            
         await context.bot.send_message(chat_id, text, parse_mode)
     elif res.status_code == 401:
         url = 'https://api.twitter.com/2/oauth2/token'
