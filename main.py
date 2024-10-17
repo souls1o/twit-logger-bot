@@ -245,7 +245,7 @@ async def display_endpoint(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id, text, parse_mode)
         
 
-async def tweet(update: Update, context: CallbackContext) -> None:
+async def post_tweet(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
     
     license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
@@ -276,7 +276,7 @@ async def tweet(update: Update, context: CallbackContext) -> None:
                           for arg in args[1:]).replace('\\n', '\n')
 
     url = 'https://api.twitter.com/2/tweets'
-    json = {'text': tweet_text, 'reply_settings': "mentionedUsers"}
+    json = {'text': message, 'reply_settings': "mentionedUsers"}
     headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
     
     res = requests.post(url, json, headers)
