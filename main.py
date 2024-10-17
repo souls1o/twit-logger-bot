@@ -296,13 +296,11 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
             'refresh_token': refresh_token
         }
         headers = {
-            'Authorization':
-            'Basic ' + base64.b64encode(
-                f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(),
+            'Authorization': 'Basic ' + base64.b64encode(f'{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}'.encode()).decode(),
             'Content-Type':
             'application/x-www-form-urlencoded'
         }
-        await context.bot.send_message(chat_id=chat_id, text=f"{json}")
+        await context.bot.send_message(chat_id=chat_id, text=f"{headers}")
         
         try:
             res = requests.post(url=url, data=urllib.parse.urlencode(json), headers=headers)
