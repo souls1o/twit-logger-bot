@@ -265,7 +265,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     username = args[0]
     user = next((u for u in group.get('authenticated_users', []) if u['username'].lower() == username.lower()), None)
     if not user:
-        text = f"⚠️ *User _{username}_ has not authorized with OAuth.*"
+        text = f"⚠️ *User* _*{username}*_ *has not authorized with OAuth.*"
         return await context.bot.send_message(chat_id, text, parse_mode)
         
     username = user["username"]
@@ -288,7 +288,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         text = f"✅ *Tweet successfully posted by user* **[{username}.](https://x.com/{username})**\n🐦 *Tweet ID:* `{tweet_id}`\n🔗 **[View tweet](https://x.com/{username}/status/{tweet_id})**\n\n💬 _Replies for this tweet are disabled. To enable replies, use the command */set_replies e*._"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
-        text = f"Error code: {res.status_code}"
+        text = f"Error code: {res.status_code}\n{r}"
         await context.bot.send_message(chat_id, text, parse_mode)
 
 
