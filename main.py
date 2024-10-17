@@ -286,6 +286,8 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     res = requests.post(url, json, headers)
     r = res.json()
     
+    await context.bot.send_message(chat_id=chat_id, text=f"{res}\n\n{r}")
+    
     if res.status_code == 201:
         tweet_id = r['data']['id']
         
