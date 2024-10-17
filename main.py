@@ -62,7 +62,7 @@ async def check_license(user_id, chat_id, context):
             
         return True
     else:
-        text = "⚠️ *Group is not setup for OAuth.*\n\n💬 _Use the /setup command to setup your group for OAuth._"
+        text = "⚠️ *Group is not setup for OAuth.*\n\n💬 _Use the_ *_/setup_* _command to setup your group for OAuth._"
         await context.bot.send_message(chat_id, text, parse_mode) 
         return False
 
@@ -110,7 +110,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         expiration_date = license.get("expiration_date")
         expiration_msg = expiration_date.strftime('%Y-%m-%d') if expiration_date else "Never"
         
-        text = f"🐍 *Welcome to Cobra Logger, {update.effective_user.full_name}*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_msg}`\n\n💬 _To get started, add me to a group and use the /setup command to setup your group for OAuth._"
+        text = f"🐍 *Welcome to Cobra Logger, _{update.effective_user.full_name}_*! 🐍\n\n✅ *Your license has been activated and will expire:* `{expiration_msg}`\n\n💬 _To get started, add me to a group and use the_ *_/setup_* command to setup your group for OAuth._"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = "⚠️ *An unknown error has occured.*"
@@ -145,13 +145,13 @@ async def setup(update: Update, context: CallbackContext) -> None:
     
     license = licenses.find_one({"used_by": owner_id, "status": "active"})
     if not license:
-        text = "⚠️ *License not found or has expired. Please purchase a license to continue using Cobra Logger.*"
+        text = "⚠️ *License not found. Please purchase a license to continue using Cobra Logger.*"
         await context.bot.send_message(chat_id, text, parse_mode)
         return
         
     expiration_date = license.get("expiration_date")
     if expiration_date and datetime.utcnow() > expiration_date:
-        text = "⚠️ *License not found or has expired. Please purchase a license to continue using Cobra Logger.*"
+        text = "⚠️ *License has expired. Please purchase a license to continue using Cobra Logger.*"
         await context.bot.send_message(chat_id, text, parse_mode) 
         return
     
@@ -268,7 +268,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     username = args[0]
     user = next((u for u in group.get('authenticated_users', []) if u['username'].lower() == username.lower()), None)
     if not user:
-        text = f"⚠️ *User* _{username}_ *has not authorized with OAuth.*"
+        text = f"⚠️ *User _{username}_ has not authorized with OAuth.*"
         return await context.bot.send_message(chat_id, text, parse_mode)
         
     username = user["username"]
@@ -295,7 +295,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         text = f"✅ *Tweet successfully posted by user* *[{username}](https://x\\.com/{username})**\\.*\n" \
            f"🐦 *Tweet ID:* `{tweet_id}`\n" \
            f"🔗 __*[View tweet](https://x\\.com/{username}/status/{tweet_id})*__\n\n" \
-           f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command_ *_/set\\_replies e_*_\\._"
+           f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command_ *_/set\\_replies_*_\\._"
                 
         await context.bot.send_message(chat_id, text, parse_mode)
     elif res.status_code == 401:
@@ -339,10 +339,11 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
             
             if res.status_code == 201:
                 tweet_id = r['data']['id']
-                text = f"✅ *Tweet successfully posted by user* **[{username}\\.]\\(https://x\\.com/{username}\\)**\n" \
+                
+                text = f"✅ *Tweet successfully posted by user* *[{username}](https://x\\.com/{username})**\\.*\n" \
                    f"🐦 *Tweet ID:* `{tweet_id}`\n" \
-                   f"🔗 **[View tweet](https://x\\.com/{username}/status/{tweet_id})**\n\n" \
-                   f"💬 _Replies for this tweet are disabled\\. To enable replies, use the command /set\\_replies e\\._"
+                   f"🔗 __*[View tweet](https://x\\.com/{username}/status/{tweet_id})*__\n\n" \
+                   f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command_ *_/set\\_replies_*_\\._"
                 await context.bot.send_message(chat_id, text, parse_mode)
             else:
                 text = f"🚫 Failed to post tweet. Error code: {res.status_code}\n{r}"
@@ -350,7 +351,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             parse_mode = "MarkdownV2"
             
-            text = f"❌ *User* **[{username}](https://x\\.com/{username})** *revoked OAuth access and is no longer valid\\.*"
+            text = f"❌ *User* *[{username}](https://x\\.com/{username})* *revoked OAuth access and is no longer valid\\.*"
             await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = f"Error code: {res.status_code}\n{r}"
