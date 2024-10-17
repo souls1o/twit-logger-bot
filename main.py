@@ -285,16 +285,14 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
     }
-    await context.bot.send_message(chat_id=chat_id, text=f"{json}\n\n{headers}")
     
     res = requests.post(url=url, json=json, headers=headers)
     r = res.json()
     
-    await context.bot.send_message(chat_id=chat_id, text=f"{res}\n\n{r}")
-    
     if res.status_code == 201:
         tweet_id = r['data']['id']
         
+        parse_mode = "MarkdownV2
         text = f"✅ *Tweet successfully posted by user* **[{username}.](https://x.com/{username})**\n🐦 *Tweet ID:* `{tweet_id}`\n🔗 **[View tweet](https://x.com/{username}/status/{tweet_id})**\n\n💬 _Replies for this tweet are disabled. To enable replies, use the command */set_replies e*._"
         await context.bot.send_message(chat_id, text, parse_mode)
     elif res.status_code == 401:
@@ -311,7 +309,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id=chat_id, text=f"{headers}")
         
         try:
-            res = requests.post(url, data, headers)
+            res = requests.post(url=url, data=data, headers=headers)
             r = res.json()
             
             await context.bot.send_message(chat_id=chat_id, text=f"{r}")
