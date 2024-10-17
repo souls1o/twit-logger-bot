@@ -294,7 +294,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         tweet_id = r['data']['id']
         
         parse_mode = "MarkdownV2"
-        text = f"✅ *Tweet successfully posted by user* **[{username}]\\(https://x\\.com/{username}\\)***\\.*\n" \
+        text = f"✅ *Tweet successfully posted by user* **[{username}\\.]\\(https://x\\.com/{username}\\)**\n" \
            f"🐦 *Tweet ID:* `{tweet_id}`\n" \
            f"🔗 **[View tweet](https://x\\.com/{username}/status/{tweet_id})**\n\n" \
            f"💬 _Replies for this tweet are disabled\\. To enable replies, use the command /set\\_replies e\\._"
@@ -341,14 +341,19 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
             
             if res.status_code == 201:
                 tweet_id = r['data']['id']
-                text = f"✅ *Tweet successfully posted by user* **[{username}.](https://x.com/{username})**\n🐦 *Tweet ID:* `{tweet_id}`\n🔗 **[View tweet](https://x.com/{username}/status/{tweet_id})**\n\n💬 _Replies for this tweet are disabled. To enable replies, use the command */set_replies e*._"
+                text = f"✅ *Tweet successfully posted by user* **[{username}\\.]\\(https://x\\.com/{username}\\)**\n" \
+                   f"🐦 *Tweet ID:* `{tweet_id}`\n" \
+                   f"🔗 **[View tweet](https://x\\.com/{username}/status/{tweet_id})**\n\n" \
+                   f"💬 _Replies for this tweet are disabled\\. To enable replies, use the command /set\\_replies e\\._"
                 await context.bot.send_message(chat_id, text, parse_mode)
             else:
                 text = f"🚫 Failed to post tweet. Error code: {res.status_code}\n{r}"
                 await context.bot.send_message(chat_id, text, parse_mode)
         except Exception as e:
-            text = f"❌ *User* **[{username}](https://x.com/{username})** *revoked OAuth access and is no longer valid.*\n{e}"
-            await context.bot.send_message(chat_id, text)
+            parse_mode = "MarkdownV2"
+            
+            text = f"❌ *User* **[{username}](https://x\\.com/{username})** *revoked OAuth access and is no longer valid\\.*"
+            await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = f"Error code: {res.status_code}\n{r}"
         await context.bot.send_message(chat_id, text, parse_mode)
