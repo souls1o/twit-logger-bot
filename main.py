@@ -249,6 +249,7 @@ async def display_endpoint(update: Update, context: CallbackContext) -> None:
 
 async def post_tweet(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
+    parse_mode = "MarkDown"
     
     license = await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context)
     if not license:
