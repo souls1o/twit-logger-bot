@@ -57,6 +57,14 @@ async def check_license(user_id, chat_id, context):
         
         expiration_date = license.get("expiration_date")
         if expiration_date and datetime.utcnow() > expiration_date:
+            license_data = {
+                "used_by": group.get("owner_id"),
+            }
+            result = licenses.update_one(
+                {"status": "expired"},
+                {"$set": license_data}
+            )
+            
             await context.bot.send_message(chat_id, text, parse_mode) 
             return False
             
@@ -85,7 +93,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     username = update.effective_user.username
     
-    if licenses.find_one({"used_by": user_id}):
+    if licenses.find_one({"used_by": user_id, "status": "active"}):
         text="⚠️ *A license is already active on your account.*"
         
         await context.bot.send_message(chat_id, text, parse_mode)
