@@ -348,7 +348,7 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
                           for arg in args[2:]).replace('\\n', '\n')
     access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
 
-    res, r = tweet(access_token, message, tweet_id=args[1])
+    res, r = tweet(token=access_token, message=message, tweet_id=args[1])
     if res.status_code == 201:
         return await handle_successful_tweet(context, chat_id, username, r, reply=True)
         
@@ -449,6 +449,7 @@ def tweet(token: str, message: str, tweet_id=0) -> tuple:
         json = {'text': message, 'reply_settings': "mentionedUsers", 'reply': {'in_reply_to_tweet_id': tweet_id}}
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
     res = requests.post(url=url, json=json, headers=headers)
+    print(res.request)
     return res, res.json()
 
 
@@ -490,6 +491,7 @@ async def handle_token_refresh_and_retry(context: CallbackContext, chat_id: int,
     )
 
     res, r = tweet(new_access_token, message, (tweet_id if tweet_id != 0 else 0))
+    print(res.request)
     if res.status_code == 201:
         await handle_successful_tweet(context, chat_id, user["username"], r, reply=True)
     else:
