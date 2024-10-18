@@ -27,7 +27,7 @@ groups = db['groups']
 licenses = db['licenses']
 templates = db['templates']
 
-parse_mode = "MarkdownV2
+parse_mode = "MarkdownV2"
 
 try:
     client.admin.command('ping')
