@@ -243,8 +243,7 @@ async def display_endpoint(update: Update, context: CallbackContext) -> None:
         text = f"🔗 *Endpoint: {group.get('endpoint')}*"
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
-        text = "⚠️ *An unknown error has occured.*"
-        await context.bot.send_message(chat_id, text, parse_mode)
+        await send_warning(context, chat_id, "unknown")
         
 
 async def post_tweet(update: Update, context: CallbackContext) -> None:
@@ -266,7 +265,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
 
     user = next((u for u in group.get('authenticated_users', []) if u['username'].lower() == args[0].lower()), None)
     if not user:
-        return await send_warning(context, chat_id, f"User _{username}_ has not authorized with OAuth\\.")
+        return await send_warning(context, chat_id, f"User* *_{username}_* *has not authorized with OAuth.")
         
     message = ' '.join(arg.strip()
                           for arg in args[1:]).replace('\\n', '\n')
@@ -480,8 +479,7 @@ async def handle_generic_error(context: CallbackContext, chat_id: int, res: requ
     
     
 async def send_warning(context: CallbackContext, chat_id: int, message: str) -> None:
-    text = f"⚠️ *{'An unknown error has occurred\\.' if message == 'unknown' else message}*"
-    parse_mode = "MarkdownV2"
+    text = f"⚠️ *{'An unknown error has occurred.' if message == 'unknown' else message}*"
     await context.bot.send_message(chat_id, text, parse_mode)
     
     
