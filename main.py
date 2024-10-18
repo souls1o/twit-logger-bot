@@ -58,10 +58,10 @@ async def check_license(user_id, chat_id, context):
         expiration_date = license.get("expiration_date")
         if expiration_date and datetime.utcnow() > expiration_date:
             license_data = {
-                "used_by": group.get("owner_id"),
+                "status": "expired",
             }
             result = licenses.update_one(
-                {"status": "expired"},
+                {"used_by": group.get("owner_id")},
                 {"$set": license_data}
             )
             
@@ -273,7 +273,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
 
     user = next((u for u in group.get('authenticated_users', []) if u['username'].lower() == args[0].lower()), None)
     if not user:
-        return await send_warning(context, chat_id, f"User* *_{username}_* *has not authorized with OAuth.")
+        return await send_warning(context, chat_id, f"User* *_{args[0]}_* *has not authorized with OAuth.")
         
     message = ' '.join(arg.strip()
                           for arg in args[1:]).replace('\\n', '\n')
