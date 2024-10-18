@@ -496,7 +496,6 @@ def main() -> None:
     app.add_handler(CommandHandler("post_tweet", post_tweet))
     app.add_handler(CommandHandler("post_reply", reply))
     app.add_handler(CommandHandler("setup", setup))
-    app.add_handler(CommandHandler("refresh", refresh))
     app.add_handler(CommandHandler("delete_tweet", delete))
     app.add_handler(CommandHandler("generate_key", generate_key))
     app.add_handler(CommandHandler("set_redirect", set_redirect))
