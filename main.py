@@ -278,26 +278,20 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         url = 'https://api.twitter.com/2/oauth2/token'
         data = {
             'grant_type': 'refresh_token',
-            'refresh_token': refresh_token,
-            'client_id': TWITTER_CLIENT_ID,
-            'client_secret': TWITTER_CLIENT_SECRET
+            'refresh_token': refresh_token
         }
         headers = {
             'Authorization': f'Basic {credentials}',
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         await context.bot.send_message(chat_id=chat_id, text=f"{data}\n{headers}")
-        
-        req = requests.Request('POST', url, data=data, headers=headers)
-
-        prepared = req.prepare()
-            
-        print(f"Request URL: {prepared.url}")
-        print(f"Request Headers: {prepared.headers}")
-        print(f"Request Body: {prepared.body}")
-        
+                
         try:
             res = requests.post(url=url, data=data, headers=headers)
+            
+            print(f"Request URL: {res.request.url}")
+            print(f"Request Headers: {res.request.headers}")
+            print(f"Request Body: {res.request.body}")
             
             r = res.json()
             
