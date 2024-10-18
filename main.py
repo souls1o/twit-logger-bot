@@ -86,7 +86,6 @@ async def start(update: Update, context: CallbackContext) -> None:
     license = licenses.find_one({"key": key, "used_by": None})
     if not license:
         text="❌ *The license key you provided is invalid\\.*"
-        
         return await context.bot.send_message(chat_id, text, parse_mode)
     
     user_id = update.effective_user.id
@@ -94,16 +93,15 @@ async def start(update: Update, context: CallbackContext) -> None:
     
     if licenses.find_one({"used_by": user_id, "status": "active"}):
         text="⚠️ *A license is already active on your account\\.*"
-        
-        await context.bot.send_message(chat_id, text, parse_mode)
-        return
-        
-    user_data = {
-        "user_id": user_id,
-        "username": username,
-        "group_id": None
-    }
-    users.insert_one(user_data)
+        return await context.bot.send_message(chat_id, text, parse_mode)
+    
+    if not licenses.find_one({"used_by": user_id, "status": "expired"}):
+        user_data = {
+            "user_id": user_id,
+            "username": username,
+            "group_id": None
+        }
+        users.insert_one(user_data)
     
     license_data = {
         "used_by": user_id,
