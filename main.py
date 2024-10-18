@@ -349,6 +349,7 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
     access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
 
     res, r = tweet(token=access_token, message=message, tweet_id=args[1])
+    print(res.request.body)
     if res.status_code == 201:
         return await handle_successful_tweet(context, chat_id, username, r, reply=True)
         
@@ -468,9 +469,10 @@ async def handle_generic_error(context: CallbackContext, chat_id: int, res: requ
         text = "❌ *Tweet failed to post\\.*\n" \
                "⚠️ *Reason:* Duplicate content detected\\. You cannot post the same tweet multiple times\\."
     else:
-        text = f"❌ *Failed to post tweet\\.*\n" \
-               f"⚠️ *Error code:* {res.status_code}\n" \
-               f"🛑 *Details:* {response.get('detail', 'Unknown error')}"
+        parse_mode = "MarkDown"
+        text = f"❌ Failed to post tweet.\n" \
+               f"⚠️ Error code: {res.status_code}\n" \
+               f"🛑 Details: {response.get('detail', 'Unknown error')}"
 
     await context.bot.send_message(chat_id, text, parse_mode)
     
