@@ -290,7 +290,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id=chat_id, text=f"{data}\n{headers}")
         
         try:
-            res = requests.post(url=url, data=data, headers=headers)
+            res = requests.post(url=url, data=urllib.parse.urlencode(data), headers=headers)
             r = res.json()
             
             await context.bot.send_message(chat_id=chat_id, text=f"{r}")
