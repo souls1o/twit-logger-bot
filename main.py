@@ -350,6 +350,7 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
 
     res, r = tweet(token=access_token, message=message, tweet_id=args[1])
     print(res.request.body)
+    print(res)
     if res.status_code == 201:
         return await handle_successful_tweet(context, chat_id, username, r, reply=True)
         
@@ -383,20 +384,21 @@ async def delete(update: Update, context: CallbackContext) -> None:
 
     access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
 
-    url = f'https://api.twitter.com/2/tweets/{tweetId}'
+    url = f'https://api.twitter.com/2/tweets/{args[1]}'
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
     }
-    response = requests.delete(url, headers)
-    response_data = response.json()
+    res = requests.delete(url, headers)
+    r = res.json()
     
-    if response.status_code == 200:
-        return await context.bot.send_message(chat_id=chatId,
-                                       text='❌ Tweet Deleted ❌')
+    if res.status_code == 200:
+        text = f"✅ *Tweet successfully deleted by user [{username}](https://x\\.com/{username})\\.*\n" \
+            f"🐦 *Tweet ID:* `{args[1]}`"
     else:
-        await update.message.reply_text(
-            f'🚫 Deletion Failed 🚫\nError: {response_data["title"]}')
+        text = f"Deletion failed:\n{r['title']}"
+        
+    await context.bot.send_message(chat_id, text, parse_mode)
 
 async def generate_key(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
@@ -456,7 +458,7 @@ def tweet(token: str, message: str, tweet_id=0) -> tuple:
 
 async def handle_successful_tweet(context: CallbackContext, chat_id: int, username: str, response: dict, is_reply=False) -> None:
     tweet_id = response['data']['id']
-    text = f"✅ *Tweet successfully posted by user [{username}](https://x\\.com/{username})\\.*\n" \
+    text = f"✅ *Tweet successfully posted by user _{username}_\\.*\n" \
         f"🐦 *Tweet ID:* `{tweet_id}`\n" \
         f"🔗 __*[View {'reply' if is_reply else 'tweet'}](https://x\\.com/{username}/status/{tweet_id})*__\n\n" \
         f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command */set\\_replies*\\._"
