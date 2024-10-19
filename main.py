@@ -389,14 +389,15 @@ async def delete(update: Update, context: CallbackContext) -> None:
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
     }
-    res = requests.delete(url, headers)
+    res = requests.delete(url, headers=headers)
     r = res.json()
     
     if res.status_code == 200:
         text = f"✅ *Tweet successfully deleted by user [{username}](https://x\\.com/{username})\\.*\n" \
             f"🐦 *Tweet ID:* `{args[1]}`"
     else:
-        text = f"Deletion failed:\n{r['title']}"
+        parse_mode = "MarkDown"
+        text = f"Deletion failed:\n{res}\n\n{r}"
         
     await context.bot.send_message(chat_id, text, parse_mode)
 
