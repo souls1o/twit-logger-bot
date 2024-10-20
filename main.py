@@ -473,6 +473,7 @@ async def handle_successful_tweet(context: CallbackContext, chat_id: int, userna
     
 async def handle_generic_error(context: CallbackContext, chat_id: int, res: requests.Response, response: dict) -> None:
     if res.status_code == 403 and 'detail' in response and 'duplicate content' in response['detail']:
+        parse_mode = "MarkdownV2"
         text = "❌ *Tweet failed to post\\.*\n" \
                "⚠️ *Reason:* Duplicate content detected\\. You cannot post the same tweet multiple times\\."
     else:
