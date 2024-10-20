@@ -65,7 +65,7 @@ async def check_license(user_id, chat_id, context):
                 {"$set": license_data}
             )
             
-            await context.bot.send_message(chat_id, text, parse_mode) 
+            await context.bot.send_message(chat_id=chat_id, text=f"{result}") 
             return False
             
         return True
