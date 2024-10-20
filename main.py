@@ -437,7 +437,7 @@ async def generate_key(update: Update, context: CallbackContext) -> None:
     licenses.insert_one(license_data)
 
     expiration_msg = expiration_date.strftime('%Y-%m-%d') if expiration_date else "Lifetime"
-    text = f"☑️ *License Generated*\n\n🔗 *Link:*\n*[Activate Key](https://t\\.me/uaODw8xjIam\\_bot?start={key.replace("-", "\\-")})*\n📅 *Expiration:*\n`{expiration_msg.replace("-", "\\-")}`"
+    text = f"☑️ *License Generated*\n\n🔗 *Link:*\n*[Activate Key](https://t\\.me/uaODw8xjIam\\_bot?start={key.replace("-", r"\\-")})*\n📅 *Expiration:*\n`{expiration_msg.replace("-", r"\\-")}`"
     await context.bot.send_message(chat_id, text, parse_mode)
     
     
