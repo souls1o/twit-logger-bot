@@ -61,11 +61,11 @@ async def check_license(user_id, chat_id, context):
                 "status": "expired",
             }
             result = licenses.update_one(
-                {"used_by": group.get("owner_id")},
+                {"used_by": group.get("owner_id"), "status": "active"},
                 {"$set": license_data}
             )
             
-            await context.bot.send_message(chat_id=chat_id, text=f"{result}") 
+            await context.bot.send_message(chat_id, text, parse_mode) 
             return False
             
         return True
@@ -437,8 +437,8 @@ async def generate_key(update: Update, context: CallbackContext) -> None:
     licenses.insert_one(license_data)
 
     expiration_msg = expiration_date.strftime('%Y-%m-%d') if expiration_date else "Lifetime"
-    parse_mode = "MarkDown"
-    await context.bot.send_message(chat_id=chat_id, text=f"☑️ *License Generated*\n\n🔗 *Link*\n*https://t.me/uaODw8xjIam_bot?start={key}*\n📅 *Expiration*\n`{expiration_msg}`", parse_mode=parse_mode)
+    text = f"☑️ *License Generated*\n\n🔗 *Link:*\n*[Activate Key](https://t\\.me/uaODw8xjIam\\_bot?start={key.replace("-", "\\-")})*\n📅 *Expiration:*\n`{expiration_msg.replace("-", "\\-")}`"
+    await context.bot.send_message(chat_id, text, parse_mode)
     
     
 def get_chat_id(update: Update) -> int:
