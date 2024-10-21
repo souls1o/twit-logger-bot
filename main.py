@@ -455,10 +455,10 @@ def tweet(token: str, message: str, tweet_id=0) -> tuple:
     if tweet_id == 0:
         json = {'text': message, 'reply_settings': "mentionedUsers"}
     else:
-        json = {'text': message, 'reply_settings': "mentionedUsers", 'reply': {'in_reply_to_tweet_id': tweet_id}}
+        json = {'text': message, 'reply': {'in_reply_to_tweet_id': tweet_id}}
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
     res = requests.post(url=url, json=json, headers=headers)
-    print(res.request)
+    print(json)
     return res, res.json()
 
 
