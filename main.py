@@ -308,7 +308,7 @@ async def display_users(update: Update, context: CallbackContext) -> None:
             username = user['username'].replace('_', '\\_')
             
             user_text = (
-                f"> 🟢 *[{username}](https://x\\.com/{username}\\)*\n"
+                f"> 🟢 *[{username}](https://x\\.com/{username})*\n"
                 f"> 📍 *Location:* {user['location']}\n"
                 f"> 📅 *Authorized:* {authorized_at}"
             )
