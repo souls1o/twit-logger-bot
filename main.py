@@ -286,6 +286,28 @@ async def display_endpoint(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id, text, parse_mode)
         
 
+async def display_users(update: Update, context: CallbackContext) -> None:
+    chat_id = get_chat_id(update)
+    
+    if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
+        return
+    
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups\\.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+        
+    group = groups.find_one({"group_id": chat_id})
+    users = group['authenticated_users']
+    if users:
+        text = f"*👥 Authenticated Users*\n\n" + "\n> \n".join([f"> 🟢 *[{user['username']}](https://x\\.com/{user['username']})*\n📍 *Location:* {user['location']}\n 📅 *Authorized:*" for user in users])
+    else:
+        text = "❌ *No authenticated users found\\.*"
+
+    await context.bot.send_message(chat_id, text, parse_mode)
+
+
 async def post_tweet(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
     
