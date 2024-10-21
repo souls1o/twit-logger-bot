@@ -456,17 +456,18 @@ def tweet(token: str, message: str, tweet_id=0) -> tuple:
         json = {'text': message, 'reply': {'in_reply_to_tweet_id': tweet_id}}
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
     res = requests.post(url=url, json=json, headers=headers)
-    print(json)
     return res, res.json()
 
 
 async def handle_successful_tweet(context: CallbackContext, chat_id: int, username: str, response: dict, is_reply=False) -> None:
     tweet_id = response['data']['id']
-    text = f"✅ *Tweet successfully posted by user _{username}_\\.*\n" \
+    text = f"✅ *{'Reply' if is_reply else 'Tweet'} successfully posted by user _{username}_\\.*\n" \
         f"🐦 *Tweet ID:* `{tweet_id}`\n" \
-        f"🔗 __*[View {'reply' if is_reply else 'tweet'}](https://x\\.com/{username}/status/{tweet_id})*__\n\n" \
-        f"💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command */set\\_replies*\\._"
-    parse_mode = "MarkdownV2"
+        f"🔗 __*[View {'reply' if is_reply else 'tweet'}](https://x\\.com/{username}/status/{tweet_id})*__"
+    
+    if not is_reply:
+        text += "\n\n💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command */set\\_replies*\\._"
+        
     await context.bot.send_message(chat_id, text, parse_mode)
     
     
