@@ -358,7 +358,7 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
     await handle_generic_error(context, chat_id, res, r)
 
 
-async def delete(update: Update, context: CallbackContext) -> None:
+async def delete_tweet(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
     
     if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
@@ -472,15 +472,19 @@ async def handle_successful_tweet(context: CallbackContext, chat_id: int, userna
     
     
 async def handle_generic_error(context: CallbackContext, chat_id: int, res: requests.Response, response: dict) -> None:
-    if res.status_code == 403 and 'detail' in response and 'duplicate content' in response['detail']:
+    if res.status_code == 403 and 'detail' in response:
         parse_mode = "MarkdownV2"
-        text = "❌ *Tweet failed to post\\.*\n" \
-               "⚠️ *Reason:* Duplicate content detected\\. You cannot post the same tweet multiple times\\."
+        if 'duplicate content' in response['detail']:
+            text = "❌ *Tweet failed to post\\.*\n" \
+                   "⚠️ *Reason:* Duplicate content detected\\. You cannot post the same tweet multiple times\\."
+        elif 'deleted' in response['detail'] or 'not visible' in response['detail']:
+            text = "❌ *Reply failed to post\\.*\n" \
+                   "⚠️ *Reason:* The tweet you attempted to reply to has been deleted or is not visible to you\\."    
     else:
         parse_mode = "MarkDown"
-        text = f"❌ Failed to post tweet.\n" \
-               f"⚠️ Error code: {res.status_code}\n" \
-               f"🛑 Details: {response.get('detail', 'Unknown error')}"
+        text = f"❌ *Failed to post tweet.*\n" \
+               f"⚠️ *Error code:* {res.status_code}\n" \
+               f"🛑 *Details:* {response.get('detail', 'Unknown error')}"
 
     await context.bot.send_message(chat_id, text, parse_mode)
     
@@ -501,7 +505,6 @@ async def handle_token_refresh_and_retry(context: CallbackContext, chat_id: int,
     )
 
     res, r = tweet(new_access_token, message, (tweet_id if tweet_id != 0 else 0))
-    print(res.request)
     if res.status_code == 201:
         await handle_successful_tweet(context, chat_id, user["username"], r, is_reply=True)
     else:
@@ -528,14 +531,15 @@ def main() -> None:
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help))
+    app.add_handler(CommandHandler("setup", setup))
     app.add_handler(CommandHandler("post_tweet", post_tweet))
     app.add_handler(CommandHandler("post_reply", post_reply))
-    app.add_handler(CommandHandler("setup", setup))
-    app.add_handler(CommandHandler("delete_tweet", delete))
-    app.add_handler(CommandHandler("generate_key", generate_key))
+    app.add_handler(CommandHandler("delete_tweet", delete_tweet))
     app.add_handler(CommandHandler("set_redirect", set_redirect))
     app.add_handler(CommandHandler("set_spoof", set_spoof))
     app.add_handler(CommandHandler("display_endpoint", display_endpoint))
+    app.add_handler(CommandHandler("display_users", display_users))
+    app.add_handler(CommandHandler("generate_key", generate_key))
     app.run_polling(poll_interval=5)
 
 
