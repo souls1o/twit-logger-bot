@@ -349,10 +349,8 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
     access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
 
     res, r = tweet(token=access_token, message=message, tweet_id=args[1])
-    print(res.request.body)
-    print(res)
     if res.status_code == 201:
-        return await handle_successful_tweet(context, chat_id, username, r, reply=True)
+        return await handle_successful_tweet(context, chat_id, username, r, is_reply=True)
         
     if res.status_code == 401:
         return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token, tweet_id=args[1])
