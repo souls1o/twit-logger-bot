@@ -393,6 +393,7 @@ async def delete(update: Update, context: CallbackContext) -> None:
     r = res.json()
     
     if res.status_code == 200:
+        parse_mode = "MarkdownV2"
         text = f"✅ *Tweet successfully deleted by user [{username}](https://x\\.com/{username})\\.*\n" \
             f"🐦 *Tweet ID:* `{args[1]}`"
     else:
