@@ -303,7 +303,8 @@ async def display_users(update: Update, context: CallbackContext) -> None:
     if users:
         user_texts = []
         for user in users:
-            authorized_at = user['authorized_at'].replace('-', '\\-')
+            authorized_at = user['authorized_at'].strftime('%Y-%m-%d')
+            authorized_at = authorized_at.replace('-', '\\-')
             username = user['username'].replace('_', '\\_')
             
             user_text = (
