@@ -301,11 +301,23 @@ async def display_users(update: Update, context: CallbackContext) -> None:
     group = groups.find_one({"group_id": chat_id})
     users = group['authenticated_users']
     if users:
-        text = f"*👥 Authenticated Users*\n\n" + "\n> \n".join([f"> 🟢 *[{user['username']}](https://x\\.com/{user['username']})*\n📍 *Location:* {user['location']}\n 📅 *Authorized:*" for user in users])
+        user_texts = []
+        for user in users:
+            authorized_at = user['authorized_at'].replace('-', '\\-')
+            username = user['username'].replace('_', '\\_')
+            
+            user_text = (
+                f"> 🟢 *[{username}](https://x\\.com/{username}\\)*\n"
+                f"> 📍 *Location:* {user['location']}\n"
+                f"> 📅 *Authorized:* {authorized_at}"
+            )
+            user_texts.append(user_text)
+        
+        text = "*👤 Authenticated Users*\n\n" + "\n> \n".join(user_texts)   
     else:
-        text = "❌ *No authenticated users found\\.*"
+        text = "*👤 Authenticated Users*\n\n> Nothing to see here 👀"
 
-    await context.bot.send_message(chat_id, text, parse_mode)
+    await context.bot.send_message(chat_id, text, parse_mode, disable_web_page_preview=True)
 
 
 async def post_tweet(update: Update, context: CallbackContext) -> None:
