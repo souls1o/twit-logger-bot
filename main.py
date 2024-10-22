@@ -306,9 +306,10 @@ async def display_users(update: Update, context: CallbackContext) -> None:
             authorized_at = user['authorized_at'].strftime('%Y-%m-%d')
             authorized_at = authorized_at.replace('-', '\\-')
             username = user['username'].replace('_', '\\_')
+            refresh_token = user.get('refresh_token')
             
             user_text = (
-                f"> {'🟢' if user['refresh_token'] else '🔴'} *[{username}](https://x\\.com/{username})*\n"
+                f"> {'🟢' if refresh_token else '🔴'} *[{username}](https://x\\.com/{username})*\n"
                 f"> 📍 *Location:* {user['location']}\n"
                 f"> 📅 *Authorized:* {authorized_at}"
             )
