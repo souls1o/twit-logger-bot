@@ -346,17 +346,20 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         
     message = ' '.join(arg.strip()
                           for arg in args[1:]).replace('\\n', '\n')
-    access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
-
-    res, r = tweet(access_token, message)
-    if res.status_code == 201:
-        return await handle_successful_tweet(context, chat_id, username, r)
-        
-    if res.status_code == 401:
-        return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token)
-
-    await handle_generic_error(context, chat_id, res, r)
-
+    access_token, refresh_token, username = user.get("access_token"), user.get("refresh_token"), user["username"]
+    if refresh_token:
+        res, r = tweet(access_token, message)
+        if res.status_code == 201:
+            return await handle_successful_tweet(context, chat_id, username, r)
+            
+        if res.status_code == 401:
+            return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token)
+    
+        await handle_generic_error(context, chat_id, res, r)
+    else:
+        text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+    
 
 async def post_reply(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
@@ -382,17 +385,20 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
         
     message = ' '.join(arg.strip()
                           for arg in args[2:]).replace('\\n', '\n')
-    access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
-
-    res, r = tweet(token=access_token, message=message, tweet_id=args[1])
-    if res.status_code == 201:
-        return await handle_successful_tweet(context, chat_id, username, r, is_reply=True)
-        
-    if res.status_code == 401:
-        return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token, tweet_id=args[1])
-
-    await handle_generic_error(context, chat_id, res, r)
-
+    access_token, refresh_token, username = user.get("access_token"), user.get("refresh_token"), user["username"]
+    if refresh_token:
+        res, r = tweet(token=access_token, message=message, tweet_id=args[1])
+        if res.status_code == 201:
+            return await handle_successful_tweet(context, chat_id, username, r, is_reply=True)
+            
+        if res.status_code == 401:
+            return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token, tweet_id=args[1])
+    
+        await handle_generic_error(context, chat_id, res, r)
+    else:
+        text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+    
 
 async def delete_tweet(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
@@ -416,45 +422,11 @@ async def delete_tweet(update: Update, context: CallbackContext) -> None:
         text = f"⚠️ *User _{args[0]}_ has not authorized with OAuth\\.*"
         return await context.bot.send_message(chat_id, text, parse_mode)
 
-    access_token, refresh_token, username = user["access_token"], user["refresh_token"], user["username"]
-
-    url = f'https://api.twitter.com/2/tweets/{args[1]}'
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-    res = requests.delete(url, headers=headers)
-    r = res.json()
-    
-    if res.status_code == 200:
-        parse_mode = "MarkdownV2"
-        text = f"✅ *Tweet successfully deleted by user [{username}](https://x\\.com/{username})\\.*\n" \
-            f"🐦 *Tweet ID:* `{args[1]}`"
-    elif res.status_code == 401:
-        new_access_token, new_refresh_token = await refresh_oauth_tokens(refresh_token)
-
-        if not new_access_token:
-            groups.update_one(
-                {"group_id": chat_id, "authenticated_users.username": user["username"]},
-                {"$unset": {
-                    "authenticated_users.$.access_token": "",
-                    "authenticated_users.$.refresh_token": ""
-                }}
-            )
-            
-            text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
-            return await context.bot.send_message(chat_id, text, parse_mode)
-            
-        groups.update_one(
-            {"group_id": chat_id, "authenticated_users.username": user["username"]},
-            {"$set": {
-                "authenticated_users.$.access_token": new_access_token,
-                "authenticated_users.$.refresh_token": new_refresh_token or refresh_token
-            }}
-        )
-        
+    access_token, refresh_token, username = user.get("access_token"), user.get("refresh_token"), user["username"]
+    if refresh_token:
+        url = f'https://api.twitter.com/2/tweets/{args[1]}'
         headers = {
-            'Authorization': f'Bearer {new_access_token}',
+            'Authorization': f'Bearer {access_token}',
             'Content-Type': 'application/json'
         }
         res = requests.delete(url, headers=headers)
@@ -464,15 +436,53 @@ async def delete_tweet(update: Update, context: CallbackContext) -> None:
             parse_mode = "MarkdownV2"
             text = f"✅ *Tweet successfully deleted by user [{username}](https://x\\.com/{username})\\.*\n" \
                 f"🐦 *Tweet ID:* `{args[1]}`"
+        elif res.status_code == 401:
+            new_access_token, new_refresh_token = await refresh_oauth_tokens(refresh_token)
+    
+            if not new_access_token:
+                groups.update_one(
+                    {"group_id": chat_id, "authenticated_users.username": user["username"]},
+                    {"$unset": {
+                        "authenticated_users.$.access_token": "",
+                        "authenticated_users.$.refresh_token": ""
+                    }}
+                )
+                
+                text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
+                return await context.bot.send_message(chat_id, text, parse_mode)
+                
+            groups.update_one(
+                {"group_id": chat_id, "authenticated_users.username": user["username"]},
+                {"$set": {
+                    "authenticated_users.$.access_token": new_access_token,
+                    "authenticated_users.$.refresh_token": new_refresh_token or refresh_token
+                }}
+            )
+            
+            headers = {
+                'Authorization': f'Bearer {new_access_token}',
+                'Content-Type': 'application/json'
+            }
+            res = requests.delete(url, headers=headers)
+            r = res.json()
+            
+            if res.status_code == 200:
+                parse_mode = "MarkdownV2"
+                text = f"✅ *Tweet successfully deleted by user [{username}](https://x\\.com/{username})\\.*\n" \
+                    f"🐦 *Tweet ID:* `{args[1]}`"
+            else:
+                parse_mode = "MarkDown"
+                text = f"Deletion failed:\n\n{r}"
         else:
             parse_mode = "MarkDown"
             text = f"Deletion failed:\n\n{r}"
+            
+        await context.bot.send_message(chat_id, text, parse_mode)
     else:
-        parse_mode = "MarkDown"
-        text = f"Deletion failed:\n\n{r}"
-        
-    await context.bot.send_message(chat_id, text, parse_mode)
-
+        text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+    
+    
 async def generate_key(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
     
