@@ -480,6 +480,7 @@ async def delete_tweet(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id, text, parse_mode)
     else:
         text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
+        parse_mode = "MarkdownV2"
         await context.bot.send_message(chat_id, text, parse_mode)
     
     
