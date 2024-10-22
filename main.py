@@ -125,7 +125,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
     
-    text = "❔ *List of Commands*\n\n *•* 🐦 */post\\_tweet* \\<username\\> \\<message\\> \\- Posts a tweet on behalf of the user\\.\n *•* 💬 */post\\_reply* \\<username\\> \\<tweet\\_id\\> \\<message\\> \\- Posts a reply to a tweet on behalf of the user\\.\n *•* ❌ */delete\\_tweet* \\<username\\> \\<tweet\\_id\\> \\- Deletes a tweet on behalf of the user\\.\n *•* 👥 */display\\_users* \\- Shows the list of authenticated users\\.\n *•* 🔗 */display\\_endpoint* \\- Displays the group's endpoint\\.\n *•* 🔄 */set\\_redirect* \\<url\\> \\- Sets the redirect upon authorization\\.\n *•* ❔ */help* \\- Displays the list of commands\\."
+    text = "❔ *List of Commands*\n\n *•* 🐦 */post\\_tweet* \\<username\\> \\<message\\> \\- Posts a tweet on behalf of the user\\.\n *•* 💬 */post\\_reply* \\<username\\> \\<tweet\\_id\\> \\<message\\> \\- Posts a reply to a tweet on behalf of the user\\.\n *•* ❌ */delete\\_tweet* \\<username\\> \\<tweet\\_id\\> \\- Deletes a tweet on behalf of the user\\.\n *•* 👥 */display\\_users* \\- Shows the list of authenticated users\\.\n *•* 🔗 */display\\_endpoint* \\- Displays the group's endpoint\\.\n *•* 🔄 */set\\_redirect* \\<url\\> \\- Sets the redirect upon authorization\\.\n *•* 🥷 */set\\_spoof* \\<url\\> \\- Sets the spoof url shown in Twitter\\.\n *•* ❔ */help* \\- Displays the list of commands\\."
     await context.bot.send_message(chat_id, text, parse_mode)
 
 
