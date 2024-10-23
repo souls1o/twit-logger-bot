@@ -604,7 +604,7 @@ async def handle_successful_tweet(context: CallbackContext, chat_id: int, userna
         group = groups.find_one({"group_id": chat_id})
 
         replies_msg = "enabled" if group["replies"] else "restricted to mentioned only"
-        text += "\n\n💬 _Replies for this tweet are {replies_msg}\\. To enable replies, use the command */set\\_replies*\\._"
+        text += f"\n\n💬 _Replies for this tweet are {replies_msg}\\. To enable replies, use the command */set\\_replies*\\._"
         
     await context.bot.send_message(chat_id, text, parse_mode)
     
