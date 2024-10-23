@@ -439,6 +439,9 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
         if res.status_code == 401:
             return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token, tweet_id=args[1])
     
+        if res.status_code == 403:
+            return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token)
+
         await handle_generic_error(context, chat_id, res, r)
     else:
         text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
