@@ -570,9 +570,12 @@ async def generate_key(update: Update, context: CallbackContext) -> None:
     escaped_key = key.replace('-', '\\-')
     escaped_expiration = expiration_msg.replace('-', '\\-')
 
-    text = f"☑️ *License Generated*\n\n🔗 *Link:*\n*[Activate Key](https://t\\.me/uaODw8xjIam\\_bot?start={escaped_key})*\n📅 *Expiration:*\n`{escaped_expiration}`"
+    text = f"☑️ *License Generated*\n\n📅 *Expiration:*\n`{escaped_expiration}`"
     await context.bot.send_message(chat_id, text, parse_mode)
     
+    text = f"*[Activate Key \\[{expiration}\\]](https://t\\.me/uaODw8xjIam\\_bot?start={escaped_key})*"
+    await context.bot.send_message(chat_id, text, parse_mode)
+
     
 def get_chat_id(update: Update) -> int:
     return update.message.chat_id if update.message else update.callback_query.message.chat_id
