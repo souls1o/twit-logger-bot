@@ -383,9 +383,6 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     access_token, refresh_token, username = user.get("access_token"), user.get("refresh_token"), user["username"]
     if refresh_token:
         res, r = tweet(chat_id=chat_id, token=access_token, message=message)
-
-        text = f"{res.request.headers}\n\n{res.request.body}"
-        await context.bot.send_message(chat_id, text)
         
         if res.status_code == 201:
             return await handle_successful_tweet(context, chat_id, username, r)
@@ -393,6 +390,9 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
         if res.status_code == 401:
             return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token)
     
+        if res.status_code == 403:
+            return await handle_token_refresh_and_retry(context, chat_id, user, message, refresh_token)
+
         await handle_generic_error(context, chat_id, res, r)
     else:
         parse_mode = "MarkdownV2"
