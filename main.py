@@ -618,7 +618,12 @@ async def handle_generic_error(context: CallbackContext, chat_id: int, res: requ
                    "⚠️ *Reason:* Duplicate content detected\\. You cannot post the same tweet multiple times\\."
         elif 'deleted' in response['detail'] or 'not visible' in response['detail']:
             text = "❌ *Reply failed to post\\.*\n" \
-                   "⚠️ *Reason:* The tweet you attempted to reply to has been deleted or is not visible to you\\."    
+                   "⚠️ *Reason:* The tweet you attempted to reply to has been deleted or is not visible to you\\."
+        else:
+            parse_mode = "MarkDown"
+            text = f"❌ *Failed to post tweet.*\n" \
+                   f"⚠️ *Error code:* {res.status_code}\n" \
+                   f"🛑 *Details:* {response.get('detail', 'Unknown error')}"
     else:
         parse_mode = "MarkDown"
         text = f"❌ *Failed to post tweet.*\n" \
