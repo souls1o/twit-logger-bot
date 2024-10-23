@@ -653,7 +653,7 @@ async def handle_token_refresh_and_retry(context: CallbackContext, chat_id: int,
 
     res, r = tweet(chat_id, new_access_token, message, (tweet_id if tweet_id != 0 else 0))
     if res.status_code == 201:
-        await handle_successful_tweet(context, chat_id, user["username"], r, is_reply=True)
+        await handle_successful_tweet(context, chat_id, user["username"], r, (is_reply=True if tweet_id != 0 else is_reply=False))
     else:
         await handle_generic_error(context, chat_id, res, r)
     
