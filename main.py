@@ -287,7 +287,8 @@ async def set_replies(update: Update, context: CallbackContext) -> None:
             {"$set": group_data}
         )
         
-        text = f"✅ *Replies for tweets from accounts are now set to {'mentioned\\-only\\.' if group['replies'] else 'enabled\\.'}*"
+        replies_msg = "mentioned\\-only\\." if group['replies'] else "enabled\\."
+        text = f"✅ *Replies for tweets from accounts are now set to {replies_msg}*"
         await context.bot.send_message(chat_id, text, parse_mode)
 
         
