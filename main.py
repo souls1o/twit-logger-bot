@@ -382,7 +382,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
                           for arg in args[1:]).replace('\\n', '\n')
     access_token, refresh_token, username = user.get("access_token"), user.get("refresh_token"), user["username"]
     if refresh_token:
-        res, r = tweet(access_token, message)
+        res, r = tweet(chat_id, access_token, message)
         if res.status_code == 201:
             return await handle_successful_tweet(context, chat_id, username, r)
             
@@ -427,7 +427,7 @@ async def post_reply(update: Update, context: CallbackContext) -> None:
                           for arg in args[2:]).replace('\\n', '\n')
     access_token, refresh_token, username = user.get("access_token"), user.get("refresh_token"), user["username"]
     if refresh_token:
-        res, r = tweet(token=access_token, message=message, tweet_id=args[1])
+        res, r = tweet(chat_id=chat_id, token=access_token, message=message, tweet_id=args[1])
         if res.status_code == 201:
             return await handle_successful_tweet(context, chat_id, username, r, is_reply=True)
             
@@ -578,10 +578,15 @@ def get_chat_id(update: Update) -> int:
     return update.message.chat_id if update.message else update.callback_query.message.chat_id
     
     
-def tweet(token: str, message: str, tweet_id=0) -> tuple:
+def tweet(chat_id: int, token: str, message: str, tweet_id=0) -> tuple:
     url = 'https://api.x.com/2/tweets'
     if tweet_id == 0:
-        json = {'text': message, 'reply_settings': "mentionedUsers"}
+        group = groups.find_one({"group_id": chat_id})
+        
+        if group["replies"]:
+            json = {'text': message, 'reply_settings': "mentionedUsers"}
+        else:
+            json = {'text': message}
     else:
         json = {'text': message, 'reply': {'in_reply_to_tweet_id': tweet_id}}
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
@@ -645,7 +650,7 @@ async def handle_token_refresh_and_retry(context: CallbackContext, chat_id: int,
         }}
     )
 
-    res, r = tweet(new_access_token, message, (tweet_id if tweet_id != 0 else 0))
+    res, r = tweet(chat_id, new_access_token, message, (tweet_id if tweet_id != 0 else 0))
     if res.status_code == 201:
         await handle_successful_tweet(context, chat_id, user["username"], r, is_reply=True)
     else:
