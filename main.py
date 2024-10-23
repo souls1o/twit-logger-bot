@@ -382,7 +382,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
                           for arg in args[1:]).replace('\\n', '\n')
     access_token, refresh_token, username = user.get("access_token"), user.get("refresh_token"), user["username"]
     if refresh_token:
-        res, r = tweet(chat_id, access_token, message)
+        res, r = tweet(chat_id=chat_id, token=access_token, message=message)
         if res.status_code == 201:
             return await handle_successful_tweet(context, chat_id, username, r)
             
