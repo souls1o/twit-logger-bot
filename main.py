@@ -287,7 +287,7 @@ async def set_replies(update: Update, context: CallbackContext) -> None:
             {"$set": group_data}
         )
         
-        replies_msg = "mentioned\\-only\\." if group['replies'] else "enabled\\."
+        replies_msg = "_mentioned\\-only_\\." if group['replies'] else "_enabled_\\."
         text = f"✅ *Replies for tweets from accounts are now set to {replies_msg}*"
         await context.bot.send_message(chat_id, text, parse_mode)
 
@@ -596,7 +596,10 @@ async def handle_successful_tweet(context: CallbackContext, chat_id: int, userna
         f"🔗 __*[View {'reply' if is_reply else 'tweet'}](https://x\\.com/{username}/status/{tweet_id})*__"
     
     if not is_reply:
-        text += "\n\n💬 _Replies for this tweet are restricted to mentioned only\\. To enable replies, use the command */set\\_replies*\\._"
+        group = groups.find_one({"group_id": chat_id})
+
+        replies_msg = "enabled" if group["replies"] else "restricted to mentioned only"
+        text += "\n\n💬 _Replies for this tweet are {replies_msg}\\. To enable replies, use the command */set\\_replies*\\._"
         
     await context.bot.send_message(chat_id, text, parse_mode)
     
