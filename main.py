@@ -675,6 +675,7 @@ def main() -> None:
     app.add_handler(CommandHandler("delete_tweet", delete_tweet))
     app.add_handler(CommandHandler("set_redirect", set_redirect))
     app.add_handler(CommandHandler("set_spoof", set_spoof))
+    app.add_handler(CommandHandler("set_replies", set_replies))
     app.add_handler(CommandHandler("display_endpoint", display_endpoint))
     app.add_handler(CommandHandler("display_users", display_users))
     app.add_handler(CommandHandler("generate_key", generate_key))
