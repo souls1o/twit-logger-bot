@@ -384,6 +384,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     if refresh_token:
         res, r = tweet(chat_id=chat_id, token=access_token, message=message)
         
+        parse_mode = "MarkDown"
         text = f"{r}"
         await context.bot.send_message(chat_id, text, parse_mode)
         
@@ -395,6 +396,7 @@ async def post_tweet(update: Update, context: CallbackContext) -> None:
     
         await handle_generic_error(context, chat_id, res, r)
     else:
+        parse_mode = "MarkdownV2"
         text = f"❌ *User _[{username}](https://x\\.com/{username})_ revoked OAuth access and is no longer valid\\.*"
         await context.bot.send_message(chat_id, text, parse_mode)
     
